@@ -1,0 +1,194 @@
+﻿smiles,k_exp,name,category,source,rdkit_valid
+CCCCC,1.837,Pentane,alkane,CRC Handbook,True
+CCCCCC,1.886,Hexane,alkane,CRC Handbook,True
+CCCCCCC,1.921,Heptane,alkane,CRC Handbook,True
+CCCCCCCC,1.946,Octane,alkane,CRC Handbook,True
+CCCCCCCCC,1.972,Nonane,alkane,CRC Handbook,True
+CCCCCCCCCC,1.985,Decane,alkane,CRC Handbook,True
+CCCCCCCCCCCC,2.012,Dodecane,alkane,CRC Handbook,True
+CCCCCCCCCCCCCC,2.037,Tetradecane,alkane,CRC Handbook,True
+CCCCCCCCCCCCCCCC,2.046,Hexadecane,alkane,CRC Handbook,True
+CC(C)CCC,1.886,2-Methylpentane,alkane,CRC Handbook,True
+CCC(C)CC,1.886,3-Methylpentane,alkane,CRC Handbook,True
+CC(C)(C)CC,1.869,"2,2-Dimethylbutane",alkane,CRC Handbook,True
+CCC(C)(C)C,1.888,"2,3-Dimethylbutane",alkane,CRC Handbook,True
+CC(C)CC(C)C,1.926,"2,4-Dimethylpentane",alkane,CRC Handbook,True
+CC(C)(C)C,1.769,Neopentane,alkane,CRC Handbook,True
+CC(C)CCCC,1.921,2-Methylhexane,alkane,CRC Handbook,True
+CCCC(C)CCC,1.943,4-Methylheptane,alkane,CRC Handbook,True
+CC(C)(C)CC(C)(C)C,1.94,"2,2,4-Trimethylpentane",alkane,CRC Handbook,True
+C1CCC1,1.942,Cyclobutane,cycloalkane,CRC Handbook,True
+C1CCCC1,1.965,Cyclopentane,cycloalkane,CRC Handbook,True
+C1CCCCC1,2.024,Cyclohexane,cycloalkane,CRC Handbook,True
+C1CCCCCC1,2.079,Cycloheptane,cycloalkane,CRC Handbook,True
+C1CCCCCCC1,2.116,Cyclooctane,cycloalkane,CRC Handbook,True
+CC1CCCCC1,2.024,Methylcyclohexane,cycloalkane,CRC Handbook,True
+CC1CCCC1,1.987,Methylcyclopentane,cycloalkane,CRC Handbook,True
+C1CCC2CCCCC2C1,2.184,trans-Decalin,cycloalkane,CRC Handbook,True
+C1CCC2CCCCC2C1,2.219,cis-Decalin,cycloalkane,CRC Handbook,True
+CC(C)C1CCCCC1,2.023,Isopropylcyclohexane,cycloalkane,CRC Handbook,True
+c1ccccc1,2.283,Benzene,aromatic,CRC Handbook,True
+Cc1ccccc1,2.374,Toluene,aromatic,CRC Handbook,True
+Cc1ccccc1C,2.562,o-Xylene,aromatic,CRC Handbook,True
+Cc1cccc(C)c1,2.359,m-Xylene,aromatic,CRC Handbook,True
+Cc1ccc(C)cc1,2.271,p-Xylene,aromatic,CRC Handbook,True
+CCc1ccccc1,2.446,Ethylbenzene,aromatic,CRC Handbook,True
+C=Cc1ccccc1,2.474,Styrene,aromatic,CRC Handbook,True
+Cc1ccc(C)c(C)c1,2.377,"1,2,4-Trimethylbenzene",aromatic,CRC Handbook,True
+Cc1cc(C)cc(C)c1,2.279,Mesitylene,aromatic,CRC Handbook,True
+CCCc1ccccc1,2.37,Propylbenzene,aromatic,CRC Handbook,True
+CC(C)c1ccccc1,2.381,Isopropylbenzene,aromatic,CRC Handbook,True
+CCCCc1ccccc1,2.359,Butylbenzene,aromatic,CRC Handbook,True
+CC(C)(C)c1ccccc1,2.357,tert-Butylbenzene,aromatic,CRC Handbook,True
+c1ccc2ccccc2c1,2.54,Naphthalene,aromatic,CRC Handbook,True
+c1ccc(-c2ccccc2)cc1,2.53,Biphenyl,aromatic,CRC Handbook,True
+C1=CC2=CC=CC=C2C=C1,2.88,Azulene,aromatic,CRC Handbook,True
+C1CCc2ccccc21,2.685,Indane,aromatic,CRC Handbook,True
+C1CCc2ccccc2CC1,2.771,Tetralin,aromatic,CRC Handbook,True
+c1ccc(Cc2ccccc2)cc1,2.544,Diphenylmethane,aromatic,CRC Handbook,True
+c1ccc2cc3ccccc3cc2c1,3.2,Pyrene,aromatic,CRC Handbook,True
+c1ccc2ccc3ccc4ccc5ccc6ccccc6c5c4c3c2c1,3.1,Coronene,aromatic,CRC Handbook,True
+CF,1.73,Fluoromethane,halogen,CRC Handbook,True
+CCF,1.89,Fluoroethane,halogen,CRC Handbook,True
+CCCF,3.09,1-Fluoropropane,halogen,CRC Handbook,True
+Fc1ccccc1,5.465,Fluorobenzene,halogen,CRC Handbook,True
+Fc1ccc(F)cc1,2.394,p-Difluorobenzene,halogen,CRC Handbook,True
+Fc1ccccc1F,13.38,o-Difluorobenzene,halogen,CRC Handbook,True
+Fc1cccc(F)c1,5.02,m-Difluorobenzene,halogen,CRC Handbook,True
+FC(F)(F)c1ccccc1,9.22,Benzotrifluoride,halogen,CRC Handbook,True
+ClC(Cl)Cl,4.807,Chloroform,halogen,CRC Handbook,True
+ClCCl,8.93,Dichloromethane,halogen,CRC Handbook,True
+CCl,9.08,Chloromethane,halogen,CRC Handbook,True
+CCCl,7.276,1-Chloropropane,halogen,CRC Handbook,True
+ClCCCl,9.6,"1,2-Dichloroethane",halogen,CRC Handbook,True
+Clc1ccccc1,5.69,Chlorobenzene,halogen,CRC Handbook,True
+Clc1ccc(Cl)cc1,2.394,p-Dichlorobenzene,halogen,CRC Handbook,True
+Clc1cccc(Cl)c1,5.024,m-Dichlorobenzene,halogen,CRC Handbook,True
+Clc1ccccc1Cl,9.995,o-Dichlorobenzene,halogen,CRC Handbook,True
+ClC(Cl)(Cl)Cl,2.238,Carbon tetrachloride,halogen,CRC Handbook,True
+Brc1ccccc1,5.454,Bromobenzene,halogen,CRC Handbook,True
+BrCCl,7.08,Bromochloromethane,halogen,CRC Handbook,True
+BrCCBr,4.81,"1,2-Dibromoethane",halogen,CRC Handbook,True
+Ic1ccccc1,4.547,Iodobenzene,halogen,CRC Handbook,True
+ClC=CCl,3.39,Trichloroethylene,halogen,CRC Handbook,True
+ClC(Cl)=C(Cl)Cl,2.268,Tetrachloroethylene,halogen,CRC Handbook,True
+FC(F)(F)C(F)(F)F,1.693,Perfluoroethane,fluorinated,CRC Handbook,True
+FC(F)(F)C(F)(F)C(F)(F)F,1.73,Perfluoropropane,fluorinated,CRC Handbook,True
+FC(F)(F)C(F)(F)C(F)(F)C(F)(F)F,1.78,Perfluorobutane,fluorinated,CRC Handbook,True
+FC(F)(F)CCCCC(F)(F)F,1.82,Perfluorohexane,fluorinated,CRC Handbook,True
+FC1(F)CCCCC1,2.6,Fluorocyclohexane,fluorinated,CRC Handbook,True
+FC(F)(F)c1ccc(C(F)(F)F)cc1,2.45,p-bis-CF3-benzene,fluorinated,CRC Handbook,True
+FC1=C(F)C(F)=C(F)C(F)=C1F,2.029,Hexafluorobenzene,fluorinated,CRC Handbook,True
+C(F)(F)(F)OC(F)(F)F,2.034,Perfluorodimethyl ether,fluorinated,CRC Handbook,True
+FC(F)(F)C(F)(F)OC(F)(F)C(F)(F)F,1.95,PFPE-short,fluorinated,CRC Handbook,True
+CCOCC,4.267,Diethyl ether,ether,CRC Handbook,True
+CC(C)OC(C)C,3.805,Diisopropyl ether,ether,CRC Handbook,True
+CCCCOCCCC,3.083,Di-n-butyl ether,ether,CRC Handbook,True
+C1CCOC1,7.582,Tetrahydrofuran,ether,CRC Handbook,True
+C1CCOCC1,2.219,"1,4-Dioxane",ether,CRC Handbook,True
+C1CCOC1C,6.97,2-Methyltetrahydrofuran,ether,CRC Handbook,True
+COCCOC,7.3,"1,2-Dimethoxyethane",ether,CRC Handbook,True
+COc1ccccc1,4.216,Anisole,ether,CRC Handbook,True
+CCOc1ccccc1,4.216,Phenetole,ether,CRC Handbook,True
+COC(C)(C)C,4.5,MTBE,ether,CRC Handbook,True
+C1COCCO1,7.13,"1,3-Dioxolane",ether,CRC Handbook,True
+CO,32.61,Methanol,alcohol,CRC Handbook,True
+CCO,24.85,Ethanol,alcohol,CRC Handbook,True
+CCCO,20.52,1-Propanol,alcohol,CRC Handbook,True
+CC(C)O,19.26,2-Propanol,alcohol,CRC Handbook,True
+CCCCO,17.33,1-Butanol,alcohol,CRC Handbook,True
+CCC(C)O,15.94,2-Butanol,alcohol,CRC Handbook,True
+CC(C)CO,15.63,2-Methyl-1-propanol,alcohol,CRC Handbook,True
+CC(C)(C)O,11.3,tert-Butanol,alcohol,CRC Handbook,True
+CCCCCO,15.13,1-Pentanol,alcohol,CRC Handbook,True
+CCCCCCO,13.03,1-Hexanol,alcohol,CRC Handbook,True
+CCCCCCCO,11.75,1-Heptanol,alcohol,CRC Handbook,True
+CCCCCCCCO,10.3,1-Octanol,alcohol,CRC Handbook,True
+CCCCCCCCCCO,7.93,1-Decanol,alcohol,CRC Handbook,True
+OCC(O)CO,46.53,Glycerol,alcohol,CRC Handbook,True
+OCCO,40.96,Ethylene glycol,alcohol,CRC Handbook,True
+CC(O)CO,27.5,"1,2-Propanediol",alcohol,CRC Handbook,True
+OCCCO,35.1,"1,3-Propanediol",alcohol,CRC Handbook,True
+OC1CCCCC1,16.4,Cyclohexanol,alcohol,CRC Handbook,True
+OCc1ccccc1,12.02,Benzyl alcohol,alcohol,CRC Handbook,True
+Oc1ccccc1,12.4,Phenol,alcohol,CRC Handbook,True
+CCOCCO,13.38,2-Ethoxyethanol,alcohol,CRC Handbook,True
+COCCO,17.2,2-Methoxyethanol,alcohol,CRC Handbook,True
+CCCCC(CC)O,7.58,2-Ethylhexanol,alcohol,CRC Handbook,True
+CC(C)=O,20.49,Acetone,ketone,CRC Handbook,True
+CCC(C)=O,17.93,2-Butanone,ketone,CRC Handbook,True
+CCCC(C)=O,15.45,2-Pentanone,ketone,CRC Handbook,True
+CCC(=O)CC,15.45,3-Pentanone,ketone,CRC Handbook,True
+O=C1CCCCC1,16.1,Cyclohexanone,ketone,CRC Handbook,True
+CC(=O)CCCC,13.11,2-Hexanone,ketone,CRC Handbook,True
+CC(=O)CCC(C)C,13.11,MIBK,ketone,CRC Handbook,True
+CC(=O)c1ccccc1,17.39,Acetophenone,ketone,CRC Handbook,True
+O=C(c1ccccc1)c1ccccc1,11.96,Benzophenone,ketone,CRC Handbook,True
+CC(=O)CC(C)=O,26.5,Acetylacetone,ketone,CRC Handbook,True
+CC=O,21.0,Acetaldehyde,aldehyde,CRC Handbook,True
+CCC=O,18.5,Propanal,aldehyde,CRC Handbook,True
+CCCC=O,13.72,Butanal,aldehyde,CRC Handbook,True
+O=Cc1ccccc1,17.85,Benzaldehyde,aldehyde,CRC Handbook,True
+O=Cc1ccco1,41.9,Furfural,aldehyde,CRC Handbook,True
+COC=O,8.5,Methyl formate,ester,CRC Handbook,True
+CCOC=O,7.16,Ethyl formate,ester,CRC Handbook,True
+COC(C)=O,6.944,Methyl acetate,ester,CRC Handbook,True
+CCOC(C)=O,5.987,Ethyl acetate,ester,CRC Handbook,True
+CCCOC(C)=O,5.62,Propyl acetate,ester,CRC Handbook,True
+CCCCOC(C)=O,4.994,Butyl acetate,ester,CRC Handbook,True
+COC(=O)OC,3.087,Dimethyl carbonate,ester,CRC Handbook,True
+CCOC(=O)OCC,2.82,Diethyl carbonate,ester,CRC Handbook,True
+O=C1CCCO1,39.1,gamma-Butyrolactone,ester,CRC Handbook,True
+O=C1OCCO1,89.78,Ethylene carbonate,ester,CRC Handbook,True
+CC1COC(=O)O1,64.92,Propylene carbonate,ester,CRC Handbook,True
+COC(=O)c1ccccc1,6.642,Methyl benzoate,ester,CRC Handbook,True
+CCOC(=O)c1ccccc1,5.99,Ethyl benzoate,ester,CRC Handbook,True
+COC(=O)c1ccccc1C(=O)OC,8.66,Dimethyl phthalate,ester,CRC Handbook,True
+OC=O,51.1,Formic acid,acid,CRC Handbook,True
+CC(O)=O,6.253,Acetic acid,acid,CRC Handbook,True
+CCC(O)=O,3.44,Propionic acid,acid,CRC Handbook,True
+CCCC(O)=O,2.975,Butyric acid,acid,CRC Handbook,True
+OC(=O)c1ccccc1,2.62,Benzoic acid,acid,CRC Handbook,True
+CN(C)C,2.44,Trimethylamine,amine,CRC Handbook,True
+CCN(CC)CC,2.418,Triethylamine,amine,CRC Handbook,True
+CCNCC,3.68,Diethylamine,amine,CRC Handbook,True
+CCCCN,4.88,1-Butylamine,amine,CRC Handbook,True
+Nc1ccccc1,6.888,Aniline,amine,CRC Handbook,True
+CN(C)c1ccccc1,4.9,"N,N-Dimethylaniline",amine,CRC Handbook,True
+c1ccncc1,12.978,Pyridine,amine,CRC Handbook,True
+c1ccnc2ccccc12,9.0,Quinoline,amine,CRC Handbook,True
+CN(C)C=O,36.71,DMF,amide,CRC Handbook,True
+CC(=O)N(C)C,37.78,DMAc,amide,CRC Handbook,True
+O=C1CCCN1C,32.55,NMP,amide,CRC Handbook,True
+NC=O,108.94,Formamide,amide,CRC Handbook,True
+CC(N)=O,67.6,Acetamide,amide,CRC Handbook,True
+O=C1CCCCN1,17.26,Caprolactam,amide,CRC Handbook,True
+CC#N,35.688,Acetonitrile,nitrile,CRC Handbook,True
+CCC#N,27.2,Propionitrile,nitrile,CRC Handbook,True
+CCCC#N,20.7,Butyronitrile,nitrile,CRC Handbook,True
+N#Cc1ccccc1,25.9,Benzonitrile,nitrile,CRC Handbook,True
+N#CCCC#N,36.2,Glutaronitrile,nitrile,CRC Handbook,True
+C[N+](=O)[O-],35.87,Nitromethane,nitro,CRC Handbook,True
+CC[N+](=O)[O-],28.06,Nitroethane,nitro,CRC Handbook,True
+O=[N+]([O-])c1ccccc1,35.6,Nitrobenzene,nitro,CRC Handbook,True
+CSC,6.2,Dimethyl sulfide,sulfur,CRC Handbook,True
+CCSCC,5.72,Diethyl sulfide,sulfur,CRC Handbook,True
+S=C=S,2.632,Carbon disulfide,sulfur,CRC Handbook,True
+c1ccsc1,2.728,Thiophene,sulfur,CRC Handbook,True
+CS(C)=O,46.826,DMSO,sulfur,CRC Handbook,True
+O=S1(=O)CCC1,43.26,Sulfolane,sulfur,CRC Handbook,True
+C[Si](C)(C)C,1.921,Tetramethylsilane,silicon,CRC Handbook,True
+C[Si](C)(C)O[Si](C)(C)C,2.179,HMDSO,silicon,CRC Handbook,True
+C[Si](C)(C)N[Si](C)(C)C,2.3,HMDS,silicon,CRC Handbook,True
+C[Si]1(C)O[Si](C)(C)O[Si](C)(C)O[Si](C)(C)O1,2.39,D4,silicon,CRC Handbook,True
+[H][Si](O)(O)O,3.2,HSQ-unit,silicon,CRC Handbook,True
+C[Si](O)(O)O,2.85,MSQ-unit,silicon,CRC Handbook,True
+c1ccc([Si](O)(O)O)cc1,3.1,PhSQ-unit,silicon,CRC Handbook,True
+FC(F)(F)[Si](O)(O)O,2.05,F-POSS-unit,silicon,CRC Handbook,True
+C1CC2=CC=CC=C2C1,2.65,BCB-like,low_k_special,CRC Handbook,True
+c1ccc(Cc2ccccc2)cc1,2.7,Parylene-N,low_k_special,CRC Handbook,True
+c1ccc(Cc2ccc(F)cc2)cc1,2.4,Parylene-F,low_k_special,CRC Handbook,True
+FC(F)(F)c1ccc(C(F)(F)F)cc1,2.45,BTFMB,low_k_special,CRC Handbook,True
+CC(C)(C)c1ccc(Oc2ccc(C(C)(C)c3ccc(O)cc3)cc2)cc1,3.17,Bisphenol-A,polymer,CRC Handbook,True
+O=C(OCCO)c1ccccc1C(=O)OCCO,3.2,Bis-HEA-phthalate,polymer,CRC Handbook,True
+O,80.1,Water,polar,CRC Handbook,True

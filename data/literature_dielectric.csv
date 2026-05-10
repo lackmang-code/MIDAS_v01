@@ -1,0 +1,30 @@
+﻿smiles,k_exp,name,category,source,doi,note,rdkit_valid,smiles_src
+C1CC2=CC=CC=C2C1,2.65,"BCB (Cyclotene, 1 MHz)",bcb_parylene,Microelectron. Eng. 1996,10.1016/S0167931796000615,"DVS-BCB fully cured; 1 MHz, RT",True,literature
+C1CC2=CC=CC=C2C1,2.49,"BCB (Cyclotene, 11-65 GHz)",bcb_parylene,J. Infrared Millim. Terahertz Waves 2009,10.1007/s10762-009-9552-0,"CBCPW method, 11-65 GHz average",True,literature
+Cc1ccc(C)cc1,2.65,Parylene N (1 kHz),bcb_parylene,SCS Parylene datasheet,,CVD film; repeat unit = p-xylylene; 60Hz/1kHz/1MHz 모두 2.65,True,literature
+Cc1ccc(C)c(Cl)c1,3.1,Parylene C (1 kHz),bcb_parylene,SCS Parylene datasheet,,CVD film; mono-chloro p-xylylene; 1 kHz,True,literature
+Cc1cc(Cl)cc(C)c1Cl,2.82,Parylene D (1 kHz),bcb_parylene,SCS Parylene datasheet,,CVD film; di-chloro p-xylylene; 1 kHz,True,literature
+FC(F)(C1CC=CC1)F,2.3,Parylene AF4 (J. Fluorine Chem.),bcb_parylene,J. Fluorine Chem. 2003,10.1016/S0022-1139(03)00100-3,All-fluorinated CVD parylene; in/out-of-plane avg,True,literature
+FC(F)(C1CC=CC1)F,2.17,Parylene HT (1 MHz),bcb_parylene,IEEE ECTC 2023,10.1109/ECTC51909.2023.00177,"Parylene HT = purified AF4; 1 MHz, Df=0.001",True,literature
+FC(F)(C1CC=CC1)F,2.4,Parylene VT4 (0.1Hz-100kHz),bcb_parylene,Mater. Chem. Phys. 2013,10.1016/j.matchemphys.2013.07.036,Fluorinated variant; stable across freq/temp range,True,literature
+c1ccc(-c2ccccc2)cc1,2.65,SiLK polyphenylene (1 MHz),low_k_special,MRS Proc. 1997,10.1557/PROC-476-9,Spin-on crosslinked polyphenylene; 1 MHz,True,literature
+FC1(F)OC(F)(F)OC1(C(F)(F)F)C(F)(F)F,1.93,Teflon AF 1600/2400,fluorinated,DuPont datasheet / ResearchGate,,Copolymer of PTFE + perfluorodioxole; stable to GHz,True,literature
+FC1(F)OC(F)(F)OC1(C(F)(F)F)C(F)(F)F,1.57,Porous Teflon AF (1 MHz),fluorinated,Mater. Sci. Eng. B 2001,10.1016/S0921-5107(01)00504-9,Porous AF1600 film; 1 MHz,True,literature
+FC1(F)C(F)(F)OC(F)(F)C(F)(F)C1(F)F,2.1,CYTOP,fluorinated,AGC Chemicals datasheet,,Cyclic perfluoro ether polymer; volume resistivity >1e17 Ω·m,True,literature
+C[Si](O)(O)O,2.7,MSQ dense film,silicon,Mol. Cryst. Liq. Cryst. 2001,10.1080/10587250108024702,Dense methylsilsesquioxane spin-on; k~2.7,True,literature
+C[Si](O)(O)O,2.2,Porous MSQ (30 vol%),silicon,Mol. Cryst. Liq. Cryst. 2001,10.1080/10587250108024702,30 vol% porosity introduced; k~2.2,True,literature
+C[Si](O)(O)O,2.1,MSQ + D4 porogen,silicon,Vacuum 2013,10.1016/j.vacuum.2013.01.030,D4 as sacrificial porogen; k~2.1,True,literature
+[SiH](O)(O)O,2.85,HSQ dense (cured 400°C),silicon,Thin Solid Films 1998,10.1016/S0040-6090(98)01041-0,Spin-on HSQ; MOS capacitor; cured at 400°C/1h,True,literature
+[SiH](O)(O)O,2.2,Porous HSQ (D4 porogen),silicon,J. Am. Ceram. Soc. 2007,10.1111/j.1551-2916.2007.01713.x,D4 sacrificial pores; k~2.2; 1kHz-1GHz stable,True,literature
+c1ccc([Si](O)(O)O)cc1,2.24,BCB-POSS T8 (phenyl-POSS unit),silicon,Polymer 2023,10.1016/j.polymer.2023.126189,8-cage BCB-POSS; phenylsilanetriol as repeat unit proxy; 1 kHz,True,literature
+c1ccc([Si](O)(O)O)cc1,2.02,BCB-POSS T10 (phenyl-POSS unit),silicon,Polymer 2023,10.1016/j.polymer.2023.126189,10-cage BCB-POSS; phenylsilanetriol as repeat unit proxy; 1 kHz,True,literature
+FC(F)(F)[Si](O)(O)O,2.47,PI + fluorinated POSS (2 wt%),silicon,Polym. Eng. Sci. 2022,10.1002/pen.26063,Trifluoropropyl POSS blended in polyimide; 1 MHz,True,literature
+O=C1OC(=O)c2ccc(C(c3ccc4c(c3)C(=O)OC4=O)(C(F)(F)F)C(F)(F)F)cc21,2.72,6FDA-TFMB polyimide (10 GHz),fluorinated,ACS Appl. Polym. Mater. 2021,10.1021/acsapm.0c01141,"6FDA dianhydride unit; TFMB diamine; 10 GHz, Df=0.0075",True,literature
+O=C1OC(=O)c2ccc(C(c3ccc4c(c3)C(=O)OC4=O)(C(F)(F)F)C(F)(F)F)cc21,1.84,6FDA-TFMB ultra-low-k PI,fluorinated,Eur. Polym. J. 2021,10.1016/j.eurpolymj.2020.109904,Micro-branched crosslink + fluorination; 10^4 Hz,True,literature
+FC(F)(OCC1CC2CC1CC2)F,2.39,F-polynorbornene (5 GHz),fluorinated,ACS Appl. Polym. Mater. 2020,10.1021/acsapm.9b01070,"Cross-linked via -OCF=CF2 groups; 5 GHz, Df=3.7e-3",True,literature
+C[Si](O)(C)O,3.0,Dense SiOC:H (CDO),silicon,J. Appl. Phys. 2008,10.1063/1.2937082,PECVD SiOC:H dense film; CH3 termination,True,literature
+C[Si](O)(C)O,2.3,Porous SiOCH (32nm node),silicon,Academia.edu / ITRS,,30% porosity; 32 nm technology node target,True,literature
+C[Si](O)(C)O,2.5,PECVD porous organosilicate (UV),silicon,Surf. Coat. Technol. 2007,10.1016/j.surfcoat.2007.05.036,UV post-treatment; 24-31% porosity,True,literature
+C[Si](O)(C)O,1.5,Nanoporous PMSSQ (dendrimer),silicon,Nature Materials 2005,10.1038/nmat1291,Dendritic sphere imprinting; pore <2nm; k~1.5,True,literature
+Nc1ccc(-c2ccc(N)cc2)cc1,3.4,Aromatic polyimide (ODA-PMDA),polymer,"Maier, Prog. Polym. Sci. 2001",10.1016/S0079-6700(00)00043-5,Representative unfluorinated PI; benchmark,True,literature
+FC(F)(F)c1ccc(N)cc1,2.8,Fluorinated PI (CF3 pendant),fluorinated,"Maier, Prog. Polym. Sci. 2001",10.1016/S0079-6700(00)00043-5,CF3 substituted aromatic PI; lower k vs. unfluorinated,True,literature
