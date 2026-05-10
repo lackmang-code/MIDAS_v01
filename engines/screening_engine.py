@@ -242,27 +242,12 @@ def mol_to_png_bytes(smiles: str, size: int = 300) -> bytes | None:
         return None
     try:
         import io as _io
-        # PIL 방식 (Cairo 불필요 - Streamlit Cloud 호환)
-        img = Draw.MolToImage(mol, size=(size, size), kekulize=True)
+        img = Draw.MolToImage(mol, size=(size, size))
         buf = _io.BytesIO()
         img.save(buf, format="PNG")
         return buf.getvalue()
     except Exception:
-        try:
-            # 폴백: rdMolDraw2D SVG → PNG 변환 없이 SVG bytes 반환
-            import io as _io
-            from rdkit.Chem.Draw import rdMolDraw2D
-            drawer = rdMolDraw2D.MolDraw2DSVG(size, size)
-            drawer.DrawMolecule(mol)
-            drawer.FinishDrawing()
-            svg = drawer.GetDrawingText()
-            # SVG를 PNG로 변환 (cairosvg 없이 PIL fallback)
-            img = Draw.MolToImage(mol, size=(size, size))
-            buf = _io.BytesIO()
-            img.save(buf, format="PNG")
-            return buf.getvalue()
-        except Exception:
-            return None
+        return None
 
 
 def draw_grid(smiles_list: list[str],
@@ -270,30 +255,44 @@ def draw_grid(smiles_list: list[str],
               preds: list[float],
               n_cols: int = 4,
               mol_size: tuple = (220, 180)) -> bytes | None:
-    """여러 분자 그리드 이미지 → PNG bytes"""
-    mols, legends = [], []
+    """여러 분자 그리드 이미지 → PNG bytes (PIL 직접 조립 방식)"""
+    from PIL import Image, ImageDraw as PILDraw, ImageFont
+    import io as _io
+
+    cell_w, cell_h = mol_size
+    label_h = 30
+    items = []
+
     for smi, name, pred in zip(smiles_list, names, preds):
-        mol = Chem.MolFromSmiles(smi)
-        if mol is not None:
-            mols.append(mol)
+        png = mol_to_png_bytes(smi, size=min(cell_w, cell_h))
+        if png is not None:
             p_str = f"{pred:.3f}" if pred is not None else "?"
-            legends.append(f"{name[:18]}\nk={p_str}")
+            items.append((png, f"{name[:16]}  k={p_str}"))
 
-    if not mols:
+    if not items:
         return None
 
-    try:
-        # PIL 방식 (Cairo 불필요 - Streamlit Cloud 호환)
-        img = Draw.MolsToGridImage(
-            mols,
-            molsPerRow=n_cols,
-            subImgSize=mol_size,
-            legends=legends,
-            returnPNG=False,  # PIL Image 반환
-        )
-        import io as _io
-        buf = _io.BytesIO()
-        img.save(buf, format="PNG")
-        return buf.getvalue()
-    except Exception:
-        return None
+    n_rows = (len(items) + n_cols - 1) // n_cols
+    grid_w = n_cols * cell_w
+    grid_h = n_rows * (cell_h + label_h)
+
+    grid_img = Image.new("RGB", (grid_w, grid_h), color=(255, 255, 255))
+    draw = PILDraw.Draw(grid_img)
+
+    for idx, (png, legend) in enumerate(items):
+        row, col = divmod(idx, n_cols)
+        x = col * cell_w
+        y = row * (cell_h + label_h)
+
+        mol_img = Image.open(_io.BytesIO(png)).resize((cell_w, cell_h))
+        grid_img.paste(mol_img, (x, y))
+
+        try:
+            font = ImageFont.load_default()
+        except Exception:
+            font = None
+        draw.text((x + 4, y + cell_h + 4), legend, fill=(40, 40, 40), font=font)
+
+    buf = _io.BytesIO()
+    grid_img.save(buf, format="PNG")
+    return buf.getvalue()
