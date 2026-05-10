@@ -36,7 +36,7 @@ from engines.screening_engine import (
 from engines.paper_engine import generate_paper
 
 # ── 상수 ──────────────────────────────────────────────────────────────────────
-DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "crc_dielectric_combined.csv")
+DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "crc_dielectric_combined.csv")
 N_FEATURES = 50
 
 # ─────────────────────────────────────────────────────────────────────────────
