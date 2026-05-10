@@ -242,12 +242,27 @@ def mol_to_png_bytes(smiles: str, size: int = 300) -> bytes | None:
         return None
     try:
         import io as _io
-        img = Draw.MolToImage(mol, size=(size, size))
+        # PIL 방식 (Cairo 불필요 - Streamlit Cloud 호환)
+        img = Draw.MolToImage(mol, size=(size, size), kekulize=True)
         buf = _io.BytesIO()
         img.save(buf, format="PNG")
         return buf.getvalue()
     except Exception:
-        return None
+        try:
+            # 폴백: rdMolDraw2D SVG → PNG 변환 없이 SVG bytes 반환
+            import io as _io
+            from rdkit.Chem.Draw import rdMolDraw2D
+            drawer = rdMolDraw2D.MolDraw2DSVG(size, size)
+            drawer.DrawMolecule(mol)
+            drawer.FinishDrawing()
+            svg = drawer.GetDrawingText()
+            # SVG를 PNG로 변환 (cairosvg 없이 PIL fallback)
+            img = Draw.MolToImage(mol, size=(size, size))
+            buf = _io.BytesIO()
+            img.save(buf, format="PNG")
+            return buf.getvalue()
+        except Exception:
+            return None
 
 
 def draw_grid(smiles_list: list[str],
@@ -267,12 +282,18 @@ def draw_grid(smiles_list: list[str],
     if not mols:
         return None
 
-    n_rows = (len(mols) + n_cols - 1) // n_cols
-    img = Draw.MolsToGridImage(
-        mols,
-        molsPerRow=n_cols,
-        subImgSize=mol_size,
-        legends=legends,
-        returnPNG=True,
-    )
-    return img
+    try:
+        # PIL 방식 (Cairo 불필요 - Streamlit Cloud 호환)
+        img = Draw.MolsToGridImage(
+            mols,
+            molsPerRow=n_cols,
+            subImgSize=mol_size,
+            legends=legends,
+            returnPNG=False,  # PIL Image 반환
+        )
+        import io as _io
+        buf = _io.BytesIO()
+        img.save(buf, format="PNG")
+        return buf.getvalue()
+    except Exception:
+        return None
