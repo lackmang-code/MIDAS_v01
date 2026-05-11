@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root {
+  --bg: #f5f4f0;
+  --card-bg: #ffffff;
+  --accent: #1a56a0;
+  --accent2: #0a3d62;
+  --gold: #c8a400;
+  --text: #1a1a1a;
+  --muted: #666;
+  --border: #e5e5e0;
+  --highlight: #eef4ff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ════════════════════════════
+   앱 레이어 전환
+════════════════════════════ */
+.view { display: none; height: 100vh; flex-direction: column; }
+.view.active { display: flex; }
+
+/* ════════════════════════════
+   홈 화면
+════════════════════════════ */
+.home-header {
+  background: linear-gradient(135deg, #060e1f 0%, #0d2a4a 60%, #0a3d62 100%);
+  padding: 28px 22px 22px;
+  flex-shrink: 0;
+}
+.home-header .mag-tag {
+  font-size: 10px; letter-spacing: 2.5px; color: #4dd0e1;
+  font-weight: 700; text-transform: uppercase; margin-bottom: 6px;
+}
+.home-header h1 {
+  font-size: 1.45rem; color: #fff; font-weight: 900;
+  letter-spacing: -0.5px; margin-bottom: 4px;
+}
+.home-header .sub {
+  font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 0.5px;
+}
+.home-header .issue-row {
+  display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+}
+.issue-badge {
+  background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.35);
+  color: #ffd700; font-size: 10px; font-weight: 700;
+  padding: 3px 9px; border-radius: 12px; letter-spacing: 0.5px;
+}
+
+.home-scroll {
+  flex: 1; overflow-y: auto; padding: 20px 16px 32px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.section-label-home {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  color: var(--muted); text-transform: uppercase;
+  margin-bottom: 12px; padding-left: 2px;
+}
+
+/* 테마 카드 그리드 */
+.card-grid {
+  display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px;
+}
+
+.theme-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.theme-card:active { transform: scale(0.98); }
+.theme-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+.theme-card.coming { opacity: 0.55; cursor: default; }
+.theme-card.coming:hover { transform: none; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+
+.card-accent-bar { height: 4px; width: 100%; }
+.card-body { padding: 14px 16px 16px; }
+.card-top {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; margin-bottom: 8px;
+}
+.card-series {
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  color: var(--muted); text-transform: uppercase;
+}
+.card-badges { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.badge {
+  font-size: 9px; font-weight: 700; padding: 2px 7px;
+  border-radius: 3px; letter-spacing: 0.3px;
+}
+.badge-new { background: #fff0e6; color: #c05000; border: 1px solid #ffd0a8; }
+.badge-read { background: #e6f4ea; color: #1a7a3a; border: 1px solid #a8d8b8; }
+.badge-soon { background: #f0f0f0; color: #999; border: 1px solid #ddd; }
+
+.card-title {
+  font-size: 15px; font-weight: 800; line-height: 1.4;
+  margin-bottom: 7px; word-break: keep-all; color: #111;
+}
+.card-desc {
+  font-size: 12.5px; color: var(--muted); line-height: 1.6;
+  word-break: keep-all; margin-bottom: 10px;
+}
+.card-footer {
+  display: flex; gap: 10px; align-items: center;
+  flex-wrap: wrap;
+}
+.card-kw {
+  font-size: 10px; background: var(--highlight);
+  color: var(--accent); border: 1px solid #c5d7f7;
+  padding: 2px 7px; border-radius: 3px; font-weight: 700;
+}
+.card-time {
+  margin-left: auto; font-size: 11px; color: #bbb;
+  white-space: nowrap;
+}
+.read-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #1a7a3a; color: #fff;
+  font-size: 11px; display: none;
+  align-items: center; justify-content: center;
+  font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.theme-card.read .read-check { display: flex; }
+
+/* 진행 바 */
+.progress-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 20px; padding: 12px 14px;
+  background: var(--card-bg); border-radius: 10px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.progress-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.progress-track {
+  flex: 1; height: 6px; background: #ebebeb;
+  border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, #1a56a0, #4d8fdc);
+  transition: width 0.4s ease;
+}
+.progress-count { font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+
+/* ════════════════════════════
+   상세 화면 (에세이)
+════════════════════════════ */
+.detail-nav {
+  display: flex; align-items: center;
+  padding: 0 14px; height: 48px; flex-shrink: 0;
+  background: #fff; border-bottom: 1px solid var(--border);
+  gap: 10px; position: relative;
+}
+.back-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 13px; font-weight: 700; color: var(--accent);
+  padding: 6px 8px; border-radius: 5px;
+  font-family: inherit; white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.back-btn:hover { background: var(--highlight); }
+.nav-title {
+  font-size: 13px; font-weight: 700; color: #333;
+  flex: 1; text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding: 0 8px;
+}
+.reading-time-nav { font-size: 11px; color: #bbb; white-space: nowrap; }
+
+/* 읽기 진행바 */
+.read-progress-bar {
+  height: 3px; background: #eee; flex-shrink: 0;
+}
+.read-progress-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), #4d8fdc);
+  transition: width 0.1s linear;
+}
+
+.detail-scroll {
+  flex: 1; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── 에세이 내부 스타일 ── */
+.hero {
+  background: linear-gradient(135deg, #060e1f 0%, #0d2a4a 60%, #0a3d62 100%);
+  padding: 44px 22px 36px; text-align: center; position: relative; overflow: hidden;
+}
+.hero::before {
+  content: 'UPS'; position: absolute;
+  font-size: 9rem; font-weight: 900;
+  color: rgba(255,255,255,0.04);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none; white-space: nowrap;
+}
+.hero-tag {
+  display: inline-block;
+  background: rgba(77,208,225,0.15); border: 1px solid rgba(77,208,225,0.4);
+  color: #4dd0e1; font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; padding: 4px 12px; border-radius: 20px;
+  margin-bottom: 14px; text-transform: uppercase;
+}
+.hero h2 {
+  font-size: clamp(1.2rem, 4vw, 1.8rem); color: #fff;
+  line-height: 1.4; margin-bottom: 10px; word-break: keep-all;
+}
+.hero-sub { font-size: 13px; color: rgba(255,255,255,0.45); }
+.kw-row { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 14px; }
+.kw {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.7); font-size: 10px; font-weight: 700;
+  padding: 2px 9px; border-radius: 4px; letter-spacing: 0.5px;
+}
+
+.article { max-width: 700px; margin: 0 auto; padding: 0 18px 60px; }
+.section { margin-top: 38px; }
+.section-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; margin-bottom: 5px; }
+.section h2 { font-size: 1.15rem; line-height: 1.45; margin-bottom: 14px; word-break: keep-all; }
+.body-text { font-size: 15px; line-height: 1.95; color: #2a2a2a; word-break: keep-all; }
+.body-text p { margin-bottom: 13px; }
+.body-text p:last-child { margin-bottom: 0; }
+strong { color: #111; font-weight: 700; }
+code { background: #f0f0f0; border: 1px solid #e0e0e0; padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: monospace; }
+.divider { height: 1px; background: linear-gradient(90deg, var(--border), transparent); margin: 28px 0; }
+.q-box { background: var(--highlight); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 12px 14px; margin: 18px 0; font-size: 14px; font-weight: 700; color: #1a3a6e; line-height: 1.6; word-break: keep-all; }
+.insight { background: #fff8e6; border: 1px solid #f0d870; border-radius: 8px; padding: 12px 14px; margin: 18px 0; font-size: 13.5px; color: #5a4200; line-height: 1.7; word-break: keep-all; }
+.insight::before { content: '💡 '; }
+
+.toggle-wrap { margin: 14px 0; }
+.toggle-btn { display: flex; align-items: center; gap: 8px; background: #f5f5f2; border: 1px solid var(--border); border-radius: 7px; padding: 10px 13px; font-size: 13px; font-weight: 700; color: #333; cursor: pointer; width: 100%; text-align: left; transition: background 0.15s; font-family: inherit; }
+.toggle-btn:hover { background: #ededea; }
+.toggle-arrow { margin-left: auto; font-size: 10px; color: #aaa; transition: transform 0.2s; }
+.toggle-btn.open .toggle-arrow { transform: rotate(180deg); }
+.toggle-body { display: none; border: 1px solid var(--border); border-top: none; border-radius: 0 0 7px 7px; padding: 13px 14px; background: #fff; font-size: 13.5px; line-height: 1.8; color: #444; word-break: keep-all; }
+.toggle-body.open { display: block; }
+
+.chart-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 18px 0; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+.chart-header { background: #111; color: #fff; font-size: 12px; font-weight: 700; padding: 8px 14px; letter-spacing: 0.5px; }
+.chart-body { padding: 14px; }
+.bar-row { margin-bottom: 14px; }
+.bar-row:last-child { margin-bottom: 0; }
+.bar-label { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 5px; }
+.bar-name { font-weight: 700; }
+.bar-val { color: var(--muted); font-weight: 600; }
+.bar-track { background: #f0f0f0; border-radius: 4px; height: 16px; position: relative; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(.4,0,.2,1); width: 0; }
+.bar-sub { font-size: 10.5px; color: var(--muted); margin-top: 3px; }
+.bar-fill.vcsel { background: linear-gradient(90deg, #1a56a0, #4d8fdc); }
+.bar-fill.led { background: linear-gradient(90deg, #bbb, #ddd); }
+.winner { font-weight: 700; color: var(--accent); }
+
+.spec-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 14px 0; }
+.spec-table thead tr { background: #f5f5f2; }
+.spec-table th { padding: 8px 10px; text-align: center; font-weight: 700; border-bottom: 2px solid var(--border); color: #333; }
+.spec-table th:first-child { text-align: left; }
+.spec-table td { padding: 8px 10px; text-align: center; border-bottom: 1px solid var(--border); }
+.spec-table td:first-child { text-align: left; font-weight: 700; }
+.spec-table tr.hl td { background: #eef4ff; color: var(--accent); }
+
+.diagram-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 18px 14px; margin: 18px 0; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+.diagram-title { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; text-align: center; }
+.layer-stack { display: flex; flex-direction: column; gap: 3px; max-width: 340px; margin: 0 auto; }
+.layer { border-radius: 5px; padding: 7px 12px; font-size: 12px; font-weight: 700; text-align: center; position: relative; cursor: pointer; transition: filter 0.15s, transform 0.15s; }
+.layer:hover { filter: brightness(0.93); transform: scaleX(1.02); }
+.layer-tooltip { display: none; position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); background: #111; color: #fff; font-size: 10.5px; font-weight: 400; padding: 6px 9px; border-radius: 5px; white-space: nowrap; z-index: 10; line-height: 1.5; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.layer-tooltip::before { content: ''; position: absolute; right: 100%; top: 50%; transform: translateY(-50%); border: 5px solid transparent; border-right-color: #111; }
+.layer:hover .layer-tooltip { display: block; }
+.layer-arrow { text-align: center; font-size: 12px; color: #aaa; line-height: 1; margin: 1px 0; }
+.transmit-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 12px; line-height: 1.6; }
+
+.num-list { list-style: none; margin: 14px 0; }
+.num-list li { display: flex; gap: 11px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.7; word-break: keep-all; }
+.num-list li:last-child { border-bottom: none; }
+.num-badge { flex-shrink: 0; background: #111; color: #fff; font-size: 10px; font-weight: 700; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 3px; }
+
+.closing { background: linear-gradient(135deg, #060e1f, #0d2a4a); border-radius: 12px; padding: 26px 20px; margin-top: 40px; text-align: center; color: rgba(255,255,255,0.8); font-size: 14px; line-height: 1.9; word-break: keep-all; }
+.closing em { display: block; font-size: 1rem; font-weight: 700; color: #ffd700; margin-top: 10px; font-style: normal; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ 홈 화면 ════════════════════ -->
+<div class="view active" id="view-home">
+  <div class="home-header">
+    <div class="mag-tag">Sungkyunkwan University · 첨단디스플레이공학과</div>
+    <h1>꼬리에 꼬리를 무는<br>디스플레이 이야기</h1>
+    <div class="sub">계간지 창간호 · April 2026</div>
+    <div class="issue-row">
+      <span class="issue-badge">창간호</span>
+      <span class="issue-badge">꼬꼬무 시리즈</span>
+      <span class="issue-badge">기술 에세이</span>
+    </div>
+  </div>
+
+  <div class="home-scroll">
+    <!-- 읽기 진행 요약 -->
+    <div class="progress-row">
+      <span class="progress-label">읽기 진행</span>
+      <div class="progress-track">
+        <div class="progress-fill" id="home-progress-fill" style="width:0%"></div>
+      </div>
+      <span class="progress-count" id="home-progress-count">0 / 4</span>
+    </div>
+
+    <div class="section-label-home">이번 호 테마</div>
+    <div class="card-grid">
+
+      <!-- 카드 1: UPS (읽기 가능) -->
+      <div class="theme-card" id="card-0" onclick="openTheme(0)">
+        <div class="card-accent-bar" style="background: linear-gradient(90deg,#1a56a0,#4dd0e1)"></div>
+        <div class="read-check">✓</div>
+        <div class="card-body">
+          <div class="card-top">
+            <span class="card-series">꼬꼬무 1탄</span>
+            <div class="card-badges">
+              <span class="badge badge-new">NEW</span>
+            </div>
+          </div>
+          <div class="card-title">근접센서와 조도센서는<br>어디로 사라진 것일까?</div>
+          <div class="card-desc">스마트폰 화면에서 구멍이 사라졌다. 그런데 센서는 살아있다. UPS(Under Panel Sensor)와 VCSEL 기술의 연쇄를 따라가본다.</div>
+          <div class="card-footer">
+            <span class="card-kw">UPS</span>
+            <span class="card-kw">VCSEL</span>
+            <span class="card-kw">TCS3720</span>
+            <span class="card-time">⏱ 약 5분</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 카드 2~4: Coming Soon -->
+      <div class="theme-card coming">
+        <div class="card-accent-bar" style="background: linear-gradient(90deg,#888,#bbb)"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <span class="card-series">꼬꼬무 2탄</span>
+            <div class="card-badges"><span class="badge badge-soon">COMING SOON</span></div>
+          </div>
+          <div class="card-title">Under Panel Camera —<br>셀카홀도 없앨 수 있을까?</div>
+          <div class="card-desc">UPC(Under Panel Camera) 기술의 현주소. 화질 저하를 극복하기 위한 광학 설계와 AI 복원 알고리즘을 살펴본다.</div>
+          <div class="card-footer">
+            <span class="card-kw">UPC</span>
+            <span class="card-kw">ISP</span>
+            <span class="card-kw">AI Deblur</span>
+            <span class="card-time">⏱ 약 6분</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-card coming">
+        <div class="card-accent-bar" style="background: linear-gradient(90deg,#888,#bbb)"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <span class="card-series">꼬꼬무 3탄</span>
+            <div class="card-badges"><span class="badge badge-soon">COMING SOON</span></div>
+          </div>
+          <div class="card-title">OLED 수명의 적 —<br>번인(Burn-in)은 왜 생기는가?</div>
+          <div class="card-desc">픽셀 열화와 잔상의 메커니즘, 그리고 이를 막기 위해 디스플레이 엔지니어들이 쓰는 소프트웨어·하드웨어 전략.</div>
+          <div class="card-footer">
+            <span class="card-kw">Burn-in</span>
+            <span class="card-kw">OLED 수명</span>
+            <span class="card-kw">픽셀 쉬프트</span>
+            <span class="card-time">⏱ 약 7분</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-card coming">
+        <div class="card-accent-bar" style="background: linear-gradient(90deg,#888,#bbb)"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <span class="card-series">꼬꼬무 4탄</span>
+            <div class="card-badges"><span class="badge badge-soon">COMING SOON</span></div>
+          </div>
+          <div class="card-title">120Hz가 부드럽게 느껴지는<br>진짜 이유</div>
+          <div class="card-desc">주사율의 숫자 너머에 있는 것들 — 모션 블러, 응답 속도, 그리고 인간의 시각 인지 한계까지.</div>
+          <div class="card-footer">
+            <span class="card-kw">주사율</span>
+            <span class="card-kw">LTPO</span>
+            <span class="card-kw">모션 블러</span>
+            <span class="card-time">⏱ 약 5분</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ 상세 화면 ════════════════════ -->
+<div class="view" id="view-detail">
+  <!-- 상단 네비 -->
+  <div class="detail-nav">
+    <button class="back-btn" onclick="goHome()">← 목차</button>
+    <span class="nav-title">꼬꼬무 1탄 · UPS</span>
+    <span class="reading-time-nav">약 5분</span>
+  </div>
+  <!-- 읽기 진행바 -->
+  <div class="read-progress-bar">
+    <div class="read-progress-fill" id="read-bar"></div>
+  </div>
+
+  <!-- 에세이 본문 -->
+  <div class="detail-scroll" id="detail-scroll" onscroll="updateReadBar()">
+    <div class="hero">
+      <div class="hero-tag">꼬꼬무 1탄 · UPS</div>
+      <h2>근접센서와 조도센서는<br>어디로 사라진 것일까?</h2>
+      <div class="hero-sub">Under Panel Sensor 기술의 모든 것</div>
+      <div class="kw-row">
+        <span class="kw">UPS</span><span class="kw">TCS3720</span>
+        <span class="kw">VCSEL</span><span class="kw">OLED Transmittance</span><span class="kw">940nm IR</span>
+      </div>
+    </div>
+
+    <article class="article">
+      <div class="section">
+        <div class="section-label">발단</div>
+        <h2>화면에 구멍이 없다 — 그런데 센서는 살아있다</h2>
+        <div class="body-text">
+          <p>요즘 스마트폰을 들여다보면 화면부에는 카메라홀 하나만 보인다. 불과 몇 년 전만 해도 상단 노치 또는 별도 베젤에 다닥다닥 붙어있던 근접센서, 조도센서, IR 수·발광부가 어느 날 통째로 사라진 것이다.</p>
+          <p>직접 확인해보자. 폰의 평가모드(<code>*#1*#</code>)에 들어가면 근접센서와 조도센서가 <strong>멀쩡히 동작</strong>한다. 그것도 화면부에서. 구멍도 없는데.</p>
+        </div>
+        <div class="q-box">❓ 센서가 사라진 게 아니라면, 도대체 어디에 숨어있는 걸까?</div>
+        <div class="body-text">
+          <p>업계 1위 <strong>ams OSRAM</strong>의 제품 라인업을 뒤지자 단서가 나왔다. 모델명 <strong>TCS3720</strong>. "낮은 투과율 환경에서도 동작하는 Behind OLED 기술 적용, 기존 대비 감도 5배·SNR 3배 향상." 디스플레이 업계는 이 기술을 <strong>UPS(Under Panel Sensor)</strong>라고 부른다.</p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section">
+        <div class="section-label">핵심 질문 1</div>
+        <h2>OLED 패널이 빛을 투과시킨다고?</h2>
+        <div class="body-text">
+          <p>여기서 한 가지 의문이 생긴다. 반사·발광 기반의 OLED가 빛을 투과시킨다는 게 말이 되는 걸까? 직접 실험해봤다. OLED 패널을 분해하고 레이저포인터를 배면에서 조사했더니 — <strong>진짜로 투과됐다.</strong></p>
+        </div>
+        <div class="insight">모바일 OLED는 공진구조를 가지므로 반투과막인 캐소드(Cathode)는 투과가 가능하다. 그러나 애노드(Anode)는 전반사 금속이라 빛이 통과할 수 없어야 한다. 어디서 새는 것일까?</div>
+        <div class="body-text">
+          <p>패널을 현미경으로 관찰한 결과, RGB 서브픽셀 단위의 <strong>애노드 사이 틈새</strong>에 터치전극으로 추정되는 메탈 배선이 그물처럼 얽혀있고, 그 사이 미세한 공극으로 빛이 새어 나오는 것이 확인됐다. 투과율은 <strong>1% 미만</strong>으로 추정된다.</p>
+        </div>
+        <div class="diagram-card">
+          <div class="diagram-title">모바일 OLED 단면 구조 · 빛의 경로</div>
+          <div class="layer-stack">
+            <div class="layer" style="background:#c8e6ff;color:#0a2a4a">커버글라스<span class="layer-tooltip">외부 충격 보호용 강화유리</span></div>
+            <div class="layer-arrow">↕</div>
+            <div class="layer" style="background:#b3d4f5;color:#0a2a4a">터치 레이어 (ITO / Metal Mesh)<span class="layer-tooltip">정전용량 방식 터치 감지</span></div>
+            <div class="layer-arrow">↕</div>
+            <div class="layer" style="background:#80bcf0;color:#fff">편광판 + 봉지층<span class="layer-tooltip">외부광 반사 억제 및 수분 차단</span></div>
+            <div class="layer-arrow">↕</div>
+            <div class="layer" style="background:#1a56a0;color:#fff">OLED 발광층 (Cathode / EML / Anode)<span class="layer-tooltip">캐소드: 반투과 → IR 투과 가능<br>애노드 틈새로 미세 누광 (투과율 &lt;1%)</span></div>
+            <div class="layer-arrow">↕</div>
+            <div class="layer" style="background:#0d2a4a;color:#ffd700;font-weight:900">🔲 TCS3720 — UPS 센서<span class="layer-tooltip">OLED 패널 아래에 위치<br>투과된 IR을 수신하여 센싱</span></div>
+          </div>
+          <div class="transmit-note">각 레이어에 마우스를 올리면 설명이 나옵니다</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section">
+        <div class="section-label">센서 해부</div>
+        <h2>TCS3720의 내부 구조 — 두 개의 엔진, 하나의 칩</h2>
+        <div class="body-text"><p>TCS3720은 조도센서와 근접센서가 하나의 칩에 통합된 일체형 소자다.</p></div>
+        <ul class="num-list">
+          <li><span class="num-badge">1</span><div><strong>ALS Engine (조도센서부)</strong><br>RGB+C 센서 2쌍이 주변광의 조도·색온도·플리커를 측정한다. 형광등·LED 조명의 깜빡임 주파수까지 감지하여 디스플레이 밝기를 환경에 최적화한다.</div></li>
+          <li><span class="num-badge">2</span><div><strong>Proximity Engine (근접센서부)</strong><br>중심파장 940nm의 IR 센서가 반사광 강도를 측정한다. 손바닥·얼굴 접근, 폰 커버 유무, 간단한 제스처까지 구분한다.</div></li>
+        </ul>
+        <div class="toggle-wrap">
+          <button class="toggle-btn" onclick="tog(this)"><span>🔬 더 깊이 — ALS 색온도 알고리즘이란?</span><span class="toggle-arrow">▼</span></button>
+          <div class="toggle-body">RGB+C 센서의 R·G·B 채널 비율로 색온도(CCT)를 계산하고 디스플레이 화이트 밸런스에 피드백한다. 태양광(~5500K), 형광등(~4000K), 백열등(~2700K) 환경에서 각각 다른 화면 색감을 제공하는 야간 블루라이트 저감 기능의 실체다.</div>
+        </div>
+        <div class="toggle-wrap">
+          <button class="toggle-btn" onclick="tog(this)"><span>🔬 더 깊이 — 940nm IR을 쓰는 이유</span><span class="toggle-arrow">▼</span></button>
+          <div class="toggle-body">850nm 대역은 실내 조명 노이즈를 많이 받는다. 940nm는 태양광 스펙트럼과 일반 조명의 영향이 상대적으로 작아 SNR이 높다. 실리콘 포토다이오드의 감도 피크도 940nm 근방에 위치한다.</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section">
+        <div class="section-label">핵심 질문 2</div>
+        <h2>투과율 1%짜리 벽을 두 번 — 그래도 센싱이 될까?</h2>
+        <div class="q-box">💡 IR이 OLED 패널을 나갈 때 한 번, 반사되어 들어올 때 또 한 번 — 총 두 번 통과하면 신호는 0.01%가 된다. 이게 센싱이 될까?</div>
+        <div class="body-text">
+          <p>TCS3720의 권장 광원은 <strong>PLPVYL1940A_E VCSEL</strong>이다. <strong>VCSEL(Vertical Cavity Surface Emitting Laser)</strong>은 수직으로 적층된 공진구조에서 레이저를 표면 방향으로 방출하는 소자다. OLED의 마이크로캐비티 구조와 유사한 원리다.</p>
+        </div>
+        <div class="chart-card" id="chart-wrap">
+          <div class="chart-header">광원별 방사강도 비교 (동일 출력: 11mW)</div>
+          <div class="chart-body">
+            <div class="bar-row">
+              <div class="bar-label"><span class="bar-name">VCSEL</span><span class="bar-val winner">~35 mW/sr</span></div>
+              <div class="bar-track"><div class="bar-fill vcsel" id="bar-vcsel"></div></div>
+              <div class="bar-sub">출사각 18° · 레이저 집속 빔</div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-label"><span class="bar-name">IR LED</span><span class="bar-val" style="color:#aaa">&lt;5 mW/sr</span></div>
+              <div class="bar-track"><div class="bar-fill led" id="bar-led"></div></div>
+              <div class="bar-sub">출사각 ≥120° · 넓게 퍼짐</div>
+            </div>
+          </div>
+        </div>
+        <div class="body-text">
+          <p>동일 출력에서 VCSEL의 방사강도는 IR LED 대비 <strong>7배 이상</strong>이다. 투과율 1% 장벽을 두 번 통과해야 하는 UPS 환경에서 집속도 7배의 레이저는 선택이 아닌 필수다.</p>
+        </div>
+        <table class="spec-table">
+          <thead><tr><th>광원</th><th>출력</th><th>출사각</th><th>방사강도</th><th>적합성</th></tr></thead>
+          <tbody>
+            <tr class="hl"><td>VCSEL</td><td>11mW</td><td>18°</td><td class="winner">~35 mW/sr</td><td>✅</td></tr>
+            <tr><td>IR LED</td><td>11mW</td><td>≥120°</td><td style="color:#aaa">&lt;5 mW/sr</td><td>❌</td></tr>
+          </tbody>
+        </table>
+        <div class="insight">VCSEL은 일반 IR LED보다 단가가 수 배 비싸다. 그럼에도 쓰는 이유는 단 하나 — 0.01%의 신호를 살려내야 하기 때문이다.</div>
+        <div class="toggle-wrap">
+          <button class="toggle-btn" onclick="tog(this)"><span>🔬 더 깊이 — VCSEL 구조와 OLED 공진구조의 유사성</span><span class="toggle-arrow">▼</span></button>
+          <div class="toggle-body">VCSEL은 위아래로 DBR(Distributed Bragg Reflector) 반사경을 쌓고 사이에 활성층을 끼워넣은 수직 공진기다. 모바일 OLED의 마이크로캐비티 구조와 본질적으로 같은 원리다. UPS에서 이 유사한 원리를 가진 두 소자가 서로 협력하는 구도가 된다.</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section">
+        <div class="section-label">정리</div>
+        <h2>꼬꼬무가 드러낸 기술의 연쇄</h2>
+        <ul class="num-list">
+          <li><span class="num-badge">①</span><div>센서가 OLED 패널 아래로 → 패널을 빛이 투과해야 한다</div></li>
+          <li><span class="num-badge">②</span><div>OLED 투과율 1% 미만 → 일반 IR LED로는 신호가 0에 수렴</div></li>
+          <li><span class="num-badge">③</span><div>집속도 7배의 VCSEL 필요 → 레이저 기술이 스마트폰 센서로</div></li>
+          <li><span class="num-badge">④</span><div>VCSEL 구조 = OLED 공진구조 → 디스플레이 기술과 광학 기술이 수렴</div></li>
+        </ul>
+      </div>
+
+      <div class="closing">
+        스마트폰 화면의 깔끔한 미니멀리즘 뒤에는<br>0.01%의 신호를 살리기 위한 치밀한 공학이 숨어있다.
+        <em>"보이지 않는 것을 보이게 하는 기술 — 그게 UPS다."</em>
+        <div style="margin-top:16px;font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:1px">다음 탄에서 꼬꼬무는 계속됩니다 →</div>
+      </div>
+    </article>
+  </div>
+</div>
+
+<script>
+  // ── 읽은 테마 상태 ──
+  const readState = [false, false, false, false];
+
+  function updateHomeProgress() {
+    const n = readState.filter(Boolean).length;
+    document.getElementById('home-progress-fill').style.width = (n / 4 * 100) + '%';
+    document.getElementById('home-progress-count').textContent = n + ' / 4';
+  }
+
+  // ── 화면 전환 ──
+  function openTheme(idx) {
+    document.getElementById('view-home').classList.remove('active');
+    document.getElementById('view-detail').classList.add('active');
+    // 스크롤 맨 위로
+    const ds = document.getElementById('detail-scroll');
+    ds.scrollTop = 0;
+    document.getElementById('read-bar').style.width = '0%';
+    // 바 차트 애니메이션 재실행
+    animated = false;
+    setTimeout(tryAnimate, 300);
+  }
+
+  function goHome() {
+    document.getElementById('view-detail').classList.remove('active');
+    document.getElementById('view-home').classList.add('active');
+    // 읽음 처리 (스크롤 30% 이상이면)
+    const ds = document.getElementById('detail-scroll');
+    const pct = ds.scrollTop / (ds.scrollHeight - ds.clientHeight);
+    if (pct > 0.3 && !readState[0]) {
+      readState[0] = true;
+      document.getElementById('card-0').classList.add('read');
+      // badge NEW → READ
+      const b = document.querySelector('#card-0 .badge-new');
+      if (b) { b.textContent = '읽음'; b.className = 'badge badge-read'; }
+      updateHomeProgress();
+    }
+  }
+
+  // ── 읽기 진행바 ──
+  function updateReadBar() {
+    const ds = document.getElementById('detail-scroll');
+    const pct = ds.scrollTop / (ds.scrollHeight - ds.clientHeight);
+    document.getElementById('read-bar').style.width = Math.min(pct * 100, 100) + '%';
+    tryAnimate();
+  }
+
+  // ── 바 차트 IntersectionObserver ──
+  let animated = false;
+  function tryAnimate() {
+    if (animated) return;
+    const el = document.getElementById('chart-wrap');
+    if (!el) return;
+    const ds = document.getElementById('detail-scroll');
+    const rect = el.getBoundingClientRect();
+    const containerRect = ds.getBoundingClientRect();
+    if (rect.top < containerRect.bottom - 40) {
+      animated = true;
+      document.getElementById('bar-vcsel').style.width = '100%';
+      document.getElementById('bar-led').style.width = '14%';
+    }
+  }
+
+  // ── 토글 ──
+  function tog(btn) {
+    btn.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('open');
+  }
+
+  updateHomeProgress();
+</script>
+</body>
+</html>
