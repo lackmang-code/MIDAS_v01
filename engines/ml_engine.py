@@ -27,6 +27,8 @@ import pandas as pd
 
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import Ridge
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel
 from sklearn.model_selection import KFold, StratifiedShuffleSplit
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.preprocessing import StandardScaler
@@ -53,6 +55,17 @@ RF_PARAMS = dict(
     n_jobs=-1,
 )
 RIDGE_PARAMS = dict(alpha=10.0)
+
+# GPR: Matern 커널 (Shiraki 2025 방식)
+# ConstantKernel × Matern(nu=2.5) + WhiteKernel
+GPR_PARAMS = dict(
+    kernel=ConstantKernel(1.0, (1e-3, 1e3))
+           * Matern(length_scale=1.0, length_scale_bounds=(1e-2, 1e2), nu=2.5)
+           + WhiteKernel(noise_level=0.1, noise_level_bounds=(1e-5, 1e1)),
+    n_restarts_optimizer=5,
+    normalize_y=True,
+    random_state=42,
+)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -150,6 +163,12 @@ def train_single(X_tr: pd.DataFrame,
         model = Ridge(**RIDGE_PARAMS)
     elif model_type == "rf":
         model = RandomForestRegressor(**RF_PARAMS)
+    elif model_type == "gpr":
+        # GPR은 반드시 스케일링 필요
+        scaler = StandardScaler()
+        X = scaler.fit_transform(X)
+        import copy
+        model = GaussianProcessRegressor(**copy.deepcopy(GPR_PARAMS))
     else:  # gbr (default)
         model = GradientBoostingRegressor(**GBR_PARAMS)
 
@@ -174,11 +193,13 @@ def train_all_models(X_tr: pd.DataFrame,
     }
     """
     models = {}
-    for mtype in ["gbr", "rf", "ridge"]:
+    for mtype in ["gbr", "rf", "ridge", "gpr"]:
+        if verbose:
+            print(f"  [training] {mtype.upper()}...", end=" ")
         m, sc, lf = train_single(X_tr, y_tr, mtype, log_transform)
         models[mtype] = (m, sc, lf)
         if verbose:
-            print(f"  [trained] {mtype.upper()}")
+            print("done")
     return models
 
 
@@ -245,10 +266,41 @@ def predict_ensemble(models: dict,
         preds[f"pred_{name}"] = predict_one(mt, X_new)
 
     df = pd.DataFrame(preds)
-    vals = df[["pred_gbr", "pred_rf", "pred_ridge"]].values
+    pred_cols = [c for c in df.columns if c.startswith("pred_")]
+    vals = df[pred_cols].values
     df["pred_mean"] = vals.mean(axis=1)
     df["pred_std"]  = vals.std(axis=1)
     return df
+
+
+def auto_select_best(X_tr: pd.DataFrame,
+                     y_tr: pd.Series,
+                     models: dict,
+                     log_transform: bool = True,
+                     verbose: bool = True) -> str:
+    """
+    CV R² 기준으로 최적 모델 자동 선택 (Shiraki 2025 방식)
+
+    Returns
+    -------
+    best_model_name : str  ("gbr", "rf", "ridge", "gpr")
+    """
+    scores = {}
+    for mtype in models.keys():
+        try:
+            cv = cross_validate(X_tr, y_tr, mtype, n_folds=5,
+                                log_transform=log_transform, verbose=False)
+            scores[mtype] = cv["r2_mean"]
+        except Exception:
+            scores[mtype] = -999
+
+    best = max(scores, key=scores.get)
+    if verbose:
+        print("\n  [Auto Model Selection] CV R² 비교:")
+        for m, s in sorted(scores.items(), key=lambda x: -x[1]):
+            marker = " ← 최적" if m == best else ""
+            print(f"    {m.upper():6s}: R² = {s:.4f}{marker}")
+    return best
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -373,8 +425,13 @@ def run_pipeline(X: pd.DataFrame,
     print("\n[ml_engine] ── 모델 학습 ───────────────────────────")
     models = train_all_models(X_tr, y_tr, log_transform, verbose)
 
-    print("\n[ml_engine] ── 5-fold CV (GBR) ────────────────────")
-    cv_result = cross_validate(X_tr, y_tr, "gbr", 5, log_transform, verbose)
+    print("\n[ml_engine] ── 자동 모델 선택 (CV R²) ─────────────")
+    best_model = auto_select_best(X_tr, y_tr, models, log_transform, verbose)
+    print(f"\n  → 최적 모델: {best_model.upper()}")
+
+    print("\n[ml_engine] ── 5-fold CV (최적 모델) ──────────────")
+    cv_result = cross_validate(X_tr, y_tr, best_model, 5, log_transform, verbose)
+    cv_result["best_model"] = best_model
 
     print("\n[ml_engine] ── 성능 평가 ───────────────────────────")
     metrics = {}

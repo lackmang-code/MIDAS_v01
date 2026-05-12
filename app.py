@@ -27,7 +27,7 @@ warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(__file__))
 from engines.feature_engine import build_feature_matrix, select_features, get_feature_importances
 from engines.ml_engine import (
-    split_data, train_all_models, cross_validate,
+    split_data, train_all_models, cross_validate, auto_select_best,
     evaluate, predict_ensemble, calc_leverage, run_pipeline
 )
 from engines.screening_engine import (
@@ -498,7 +498,7 @@ def render_s3():
         prog = st.progress(0, text="데이터 분할 중...")
 
         with st.spinner("학습 중... (약 10-20초)"):
-            from engines.ml_engine import split_data, train_all_models, cross_validate, evaluate
+            from engines.ml_engine import split_data, train_all_models, cross_validate, evaluate, auto_select_best
             X_tr, X_val, X_te, y_tr, y_val, y_te = split_data(
                 X_sel, y, test_size=test_size, val_size=val_size
             )
@@ -672,15 +672,29 @@ def _render_s3_results():
         plt.tight_layout()
         _fig_to_st(fig, "파란점=AD 내부  빨간점=AD 외부(외삽 주의)")
 
-    # ── 최종 GBR 성능 요약 박스 ───────────────────────────────────────────────
+    # ── 모델별 성능 비교 + 최적 모델 표시 ───────────────────────────────────────
     st.markdown("---")
-    gbr_te = mets["gbr"]["test"]
-    gbr_tr = mets["gbr"]["train"]
-    st.info(
-        f"**GBR 최종 성능 요약**  |  "
-        f"Train R²={gbr_tr['R2']:.3f}  "
-        f"Test R²={gbr_te['R2']:.3f}  "
-        f"Test logRMSE={gbr_te.get('log_RMSE','N/A')}  "
+    best = cv.get("best_model", "gbr")
+    st.markdown("**📊 모델별 성능 비교 (Test R²)**")
+    col_m = st.columns(4)
+    for i, mname in enumerate(["gbr", "rf", "ridge", "gpr"]):
+        if mname in mets:
+            te = mets[mname]["test"]
+            tr = mets[mname]["train"]
+            label = f"{'⭐ ' if mname==best else ''}{mname.upper()}"
+            col_m[i].metric(
+                label,
+                f"Test R²={te['R2']:.3f}",
+                f"Train R²={tr['R2']:.3f}"
+            )
+
+    best_te = mets[best]["test"]
+    best_tr = mets[best]["train"]
+    st.success(
+        f"**최적 모델: {best.upper()}**  |  "
+        f"Train R²={best_tr['R2']:.3f}  "
+        f"Test R²={best_te['R2']:.3f}  "
+        f"Test logRMSE={best_te.get('log_RMSE','N/A')}  "
         f"CV R²={cv['r2_mean']:.3f}±{cv['r2_std']:.3f}"
     )
 
