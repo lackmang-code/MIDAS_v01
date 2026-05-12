@@ -92,7 +92,7 @@ def _autosave_paper(paper: dict, sess: dict) -> dict:
             gbr_te.get("log_RMSE", "–"),
             f"{cv.get('r2_mean',0):.3f}±{cv.get('r2_std',0):.3f}",
             len(df_v),
-            int((df_v["pred_mean"] < 3.0).sum()) if "pred_mean" in df_v.columns else "–",
+            int((df_v["pred_mean"] < 2.4).sum()) if "pred_mean" in df_v.columns else "–",
         ],
     })
     km_path = os.path.join(OUTPUT_DIR, f"key_metrics_{today}.csv")
@@ -120,8 +120,8 @@ def render_s1():
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Total molecules",  f"{len(df)}")
     c2.metric("k range",          f"{df['k_exp'].min():.2f} ~ {df['k_exp'].max():.2f}")
-    c3.metric("k < 3.0 (Low-k)", f"{(df['k_exp']<3.0).sum()}")
-    c4.metric("k < 2.5 (Ultra)",  f"{(df['k_exp']<2.5).sum()}")
+    c3.metric("k < 2.4 (Low-k)", f"{(df['k_exp']<2.4).sum()}")
+    c4.metric("k < 2.0 (Ultra)",  f"{(df['k_exp']<2.0).sum()}")
 
     st.markdown("---")
 
@@ -132,8 +132,8 @@ def render_s1():
         st.markdown("**k Distribution (full range)**")
         fig, ax = plt.subplots(figsize=(5, 3.5))
         ax.hist(df["k_exp"], bins=30, color="#3498db", edgecolor="white", alpha=0.85)
-        ax.axvline(3.0, color="red",    ls="--", lw=1.5, label="k = 3.0")
-        ax.axvline(2.5, color="orange", ls="--", lw=1.5, label="k = 2.5")
+        ax.axvline(2.4, color="red",    ls="--", lw=1.5, label="k = 2.4")
+        ax.axvline(2.0, color="orange", ls="--", lw=1.5, label="k = 2.0")
         ax.set_xlabel("Dielectric constant k")
         ax.set_ylabel("Count")
         ax.set_title("Distribution of k_exp")
@@ -146,8 +146,8 @@ def render_s1():
         df_zoom = df[df["k_exp"] < 6]
         fig, ax = plt.subplots(figsize=(5, 3.5))
         ax.hist(df_zoom["k_exp"], bins=25, color="#27ae60", edgecolor="white", alpha=0.85)
-        ax.axvline(3.0, color="red",    ls="--", lw=1.5, label="k = 3.0")
-        ax.axvline(2.5, color="orange", ls="--", lw=1.5, label="k = 2.5")
+        ax.axvline(2.4, color="red",    ls="--", lw=1.5, label="k = 2.4")
+        ax.axvline(2.0, color="orange", ls="--", lw=1.5, label="k = 2.0")
         ax.set_xlabel("Dielectric constant k")
         ax.set_ylabel("Count")
         ax.set_title(f"Low-k zoom  (n={len(df_zoom)})")
@@ -172,15 +172,15 @@ def render_s1():
     ax.set_xticklabels(ordered_cats, rotation=40, ha="right", fontsize=8)
     ax.set_ylabel("k_exp")
     ax.set_title("Dielectric constant by chemical category")
-    ax.axhline(3.0, color="red", ls="--", lw=1, label="k = 3.0")
+    ax.axhline(2.4, color="red", ls="--", lw=1, label="k = 2.4")
     ax.legend(fontsize=8)
     plt.tight_layout()
     _fig_to_st(fig, "낮을수록 Low-k 후보 (green → red 순)")
 
     # ── Low-k 후보 테이블 ─────────────────────────────────────────────────────
     st.markdown("---")
-    st.markdown("**Low-k Candidates  (k < 3.0)**")
-    lowk = (df[df["k_exp"] < 3.0]
+    st.markdown("**Low-k Candidates  (k < 2.4)**")
+    lowk = (df[df["k_exp"] < 2.4]
             .sort_values("k_exp")[["name","k_exp","category","source"]]
             .reset_index(drop=True))
     lowk.index += 1
@@ -445,7 +445,7 @@ def _render_s2_plots():
     if len(available) == 1:
         axes = [axes]
     for ax, feat in zip(axes, available):
-        colors_sc = np.where(y < 3.0, "#27ae60", np.where(y < 10.0, "#f39c12", "#e74c3c"))
+        colors_sc = np.where(y < 2.4, "#27ae60", np.where(y < 10.0, "#f39c12", "#e74c3c"))
         ax.scatter(X_all[feat], y, c=colors_sc, s=20, alpha=0.7, edgecolors="none")
         ax.set_xlabel(feat)
         ax.set_ylabel("k_exp")
@@ -453,8 +453,8 @@ def _render_s2_plots():
         ax.set_yscale("log")
         # 범례
         patches = [
-            mpatches.Patch(color="#27ae60", label="k < 3.0"),
-            mpatches.Patch(color="#f39c12", label="3 ≤ k < 10"),
+            mpatches.Patch(color="#27ae60", label="k < 2.4"),
+            mpatches.Patch(color="#f39c12", label="2.4 ≤ k < 10"),
             mpatches.Patch(color="#e74c3c", label="k ≥ 10"),
         ]
         ax.legend(handles=patches, fontsize=7)
@@ -578,7 +578,7 @@ def _render_s3_results():
         y_pred = mets["gbr"]["test"]["y_pred"]
 
         fig, ax = plt.subplots(figsize=(5, 4))
-        colors_sc = np.where(y_true < 3.0, "#27ae60",
+        colors_sc = np.where(y_true < 2.4, "#27ae60",
                     np.where(y_true < 10.0, "#f39c12", "#e74c3c"))
         ax.scatter(y_true, y_pred, c=colors_sc, s=40, alpha=0.85, edgecolors="white", lw=0.5)
         lo = min(y_true.min(), y_pred.min()) * 0.9
@@ -751,8 +751,8 @@ def render_s4():
     # ── 요약 메트릭 ───────────────────────────────────────────────────────────
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("스크리닝 후보",     f"{len(df_valid)}개")
-    c2.metric("k < 3.0 예측",     f"{(df_valid['pred_mean'] < 3.0).sum()}개")
-    c3.metric("k < 2.5 예측",     f"{(df_valid['pred_mean'] < 2.5).sum()}개")
+    c2.metric("k < 2.4 예측",     f"{(df_valid['pred_mean'] < 2.4).sum()}개")
+    c3.metric("k < 2.0 예측",     f"{(df_valid['pred_mean'] < 2.0).sum()}개")
     c4.metric("AD 내부",          f"{df_valid['ad_ok'].sum()}개")
 
     st.markdown("---")
@@ -774,8 +774,8 @@ def render_s4():
             if val is None: return ""
             try:
                 v = float(val)
-                if v < 2.5: return "background-color: #d5f5e3"
-                if v < 3.0: return "background-color: #fef9e7"
+                if v < 2.0: return "background-color: #d5f5e3"
+                if v < 2.4: return "background-color: #fef9e7"
                 if v < 5.0: return "background-color: #fdf2e9"
                 return "background-color: #fadbd8"
             except: return ""
@@ -831,8 +831,8 @@ def render_s4():
         ax = axes[0]
         ax.hist(df_valid["pred_mean"], bins=20,
                 color="#3498db", edgecolor="white", alpha=0.85)
-        ax.axvline(3.0, color="red",    ls="--", lw=1.5, label="k = 3.0")
-        ax.axvline(2.5, color="orange", ls="--", lw=1.5, label="k = 2.5")
+        ax.axvline(2.4, color="red",    ls="--", lw=1.5, label="k = 2.4")
+        ax.axvline(2.0, color="orange", ls="--", lw=1.5, label="k = 2.0")
         ax.set_xlabel("Predicted k")
         ax.set_ylabel("Count")
         ax.set_title("Predicted k Distribution")
@@ -870,7 +870,7 @@ def render_s4():
         st.markdown("**Top-10 후보  (예측 k 최저값)**")
         top10 = df_valid.head(10)
         fig2, ax3 = plt.subplots(figsize=(9, 3.5))
-        colors_bar = ["#27ae60" if v < 2.5 else "#f39c12" if v < 3.0 else "#3498db"
+        colors_bar = ["#27ae60" if v < 2.0 else "#f39c12" if v < 2.4 else "#3498db"
                       for v in top10["pred_mean"]]
         bars = ax3.barh(range(len(top10)), top10["pred_mean"].values[::-1],
                         color=colors_bar[::-1], edgecolor="white", alpha=0.9)
@@ -885,8 +885,8 @@ def render_s4():
             [n[:20] for n in top10["name"].values[::-1]], fontsize=8
         )
         ax3.set_xlabel("Predicted k")
-        ax3.axvline(3.0, color="red", ls="--", lw=1, label="k = 3.0")
-        ax3.axvline(2.5, color="orange", ls="--", lw=1, label="k = 2.5")
+        ax3.axvline(2.4, color="red", ls="--", lw=1, label="k = 2.4")
+        ax3.axvline(2.0, color="orange", ls="--", lw=1, label="k = 2.0")
         ax3.legend(fontsize=8)
         ax3.set_title("Top-10 Low-k Candidates")
         plt.tight_layout()
@@ -998,7 +998,7 @@ def render_s5():
             gbr_te.get("log_RMSE", "–"),
             f"{cv['r2_mean']:.3f}±{cv['r2_std']:.3f}",
             len(df_valid),
-            int((df_valid["pred_mean"] < 3.0).sum()) if "pred_mean" in df_valid.columns else "–",
+            int((df_valid["pred_mean"] < 2.4).sum()) if "pred_mean" in df_valid.columns else "–",
         ],
     }
     summary_csv = pd.DataFrame(summary_data).to_csv(index=False).encode("utf-8-sig")
