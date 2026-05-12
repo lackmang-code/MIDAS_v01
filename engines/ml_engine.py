@@ -455,6 +455,47 @@ def run_pipeline(X: pd.DataFrame,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Low-k 전용 파이프라인 (k < 3.5)
+# ─────────────────────────────────────────────────────────────────────────────
+def run_lowk_pipeline(X: pd.DataFrame,
+                      y: pd.Series,
+                      threshold: float = 3.5,
+                      log_transform: bool = True,
+                      verbose: bool = True
+                      ) -> dict:
+    """
+    k < threshold 데이터만 사용하는 도메인 특화 파이프라인
+
+    Returns
+    -------
+    run_pipeline() 동일 구조 + "threshold", "n_total", "n_lowk" 추가
+    """
+    # ── k < threshold 필터링 ──────────────────────────────────────────────────
+    mask = np.array(y) < threshold
+    n_total = len(y)
+    n_lowk  = mask.sum()
+
+    if verbose:
+        print(f"\n[Low-k 전용 모델] k < {threshold} 필터링")
+        print(f"  전체 {n_total}개 → {n_lowk}개 사용")
+
+    if n_lowk < 20:
+        raise ValueError(f"k < {threshold} 데이터가 {n_lowk}개로 너무 적어요 (최소 20개 필요)")
+
+    X_lk = X[mask].reset_index(drop=True)
+    y_lk = y[mask].reset_index(drop=True)
+
+    # ── 일반 파이프라인 실행 ──────────────────────────────────────────────────
+    result = run_pipeline(X_lk, y_lk, log_transform, verbose)
+    result["threshold"] = threshold
+    result["n_total"]   = n_total
+    result["n_lowk"]    = n_lowk
+    result["mode"]      = "lowk"
+
+    return result
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 독립 실행 검증
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":

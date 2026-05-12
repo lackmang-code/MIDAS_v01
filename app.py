@@ -494,18 +494,41 @@ def render_s3():
     val_size  = col2.slider("Val size",   0.10, 0.25, 0.15, 0.05)
     log_tf    = col3.checkbox("Log(k) 변환 학습", value=True)
 
+    # ── 모델 모드 선택 ────────────────────────────────────────────────────────
+    st.markdown("**모델 모드**")
+    model_mode = st.radio(
+        "",
+        ["🌐 전체 데이터 (k=1.5~109)", "🎯 Low-k 전용 (k < 3.5)"],
+        horizontal=True,
+        key="s3_model_mode"
+    )
+    if "Low-k 전용" in model_mode:
+        n_lowk = int((y < 3.5).sum())
+        st.info(f"k < 3.5 데이터만 사용: **{n_lowk}개** / 전체 {len(y)}개")
+
     if st.button("▶ 모델 학습 시작", type="primary"):
         prog = st.progress(0, text="데이터 분할 중...")
+        is_lowk = "Low-k 전용" in model_mode
 
-        with st.spinner("학습 중... (약 10-20초)"):
+        with st.spinner("학습 중... (약 20-40초)"):
             from engines.ml_engine import split_data, train_all_models, cross_validate, evaluate, auto_select_best
+            # Low-k 전용이면 k < 3.5 필터링
+            if is_lowk:
+                mask = np.array(y) < 3.5
+                X_use = X_sel[mask].reset_index(drop=True)
+                y_use = y[mask].reset_index(drop=True)
+            else:
+                X_use, y_use = X_sel, y
+
             X_tr, X_val, X_te, y_tr, y_val, y_te = split_data(
-                X_sel, y, test_size=test_size, val_size=val_size
+                X_use, y_use, test_size=test_size, val_size=val_size
             )
-            prog.progress(15, text="GBR 학습 중...")
+            prog.progress(15, text="GBR/RF/Ridge/GPR 학습 중...")
             models = train_all_models(X_tr, y_tr, log_transform=log_tf, verbose=False)
-            prog.progress(55, text="5-fold CV 중...")
-            cv = cross_validate(X_tr, y_tr, "gbr", 5, log_tf, verbose=False)
+            prog.progress(55, text="자동 모델 선택 (CV R²) 중...")
+            best_model = auto_select_best(X_tr, y_tr, models, log_tf, verbose=False)
+            cv = cross_validate(X_tr, y_tr, best_model, 5, log_tf, verbose=False)
+            cv["best_model"] = best_model
             prog.progress(80, text="성능 평가 중...")
 
             metrics = {}
@@ -527,6 +550,8 @@ def render_s3():
             "metrics": metrics,
             "leverage":{"h_te": h_te, "h_star": h_star},
             "log_tf":  log_tf,
+            "mode":    "lowk" if is_lowk else "full",
+            "n_train": len(X_tr),
         }
         st.session_state["ml_result"] = result
         prog.empty()
@@ -675,6 +700,11 @@ def _render_s3_results():
     # ── 모델별 성능 비교 + 최적 모델 표시 ───────────────────────────────────────
     st.markdown("---")
     best = cv.get("best_model", "gbr")
+    mode = res.get("mode", "full")
+    n_tr = res.get("n_train", "?")
+    mode_label = f"🎯 Low-k 전용 모델 (k<3.5, 학습 {n_tr}개)" if mode=="lowk" \
+                 else f"🌐 전체 데이터 모델 (학습 {n_tr}개)"
+    st.markdown(f"**{mode_label}**")
     st.markdown("**📊 모델별 성능 비교 (Test R²)**")
     col_m = st.columns(4)
     for i, mname in enumerate(["gbr", "rf", "ridge", "gpr"]):
