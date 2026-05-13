@@ -42,7 +42,7 @@ N_FEATURES = 50
 # ─────────────────────────────────────────────────────────────────────────────
 # 공통 유틸
 # ─────────────────────────────────────────────────────────────────────────────
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "output")
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
 
 
 def load_data() -> pd.DataFrame:
