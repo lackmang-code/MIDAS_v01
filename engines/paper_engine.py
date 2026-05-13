@@ -359,9 +359,10 @@ logRMSE = {cv_rmse:.4f}
 훈련 R² = {bm_tr_r2:.3f}, 테스트 R² = {bm_te_r2:.3f}의 \
 {'다소 큰 갭은 소규모 데이터셋(k < {:.1f}, {}종)에서 불가피한 과적합 경향을 반영하며, 교차검증 R² = {:.3f}가 보다 신뢰성 있는 예측 성능 지표이다.'.format(train_threshold, n_lowk35, cv_r2) if model_mode == 'lowk' else '갭은 모델 복잡도와 데이터 크기의 균형으로 설명된다.'}
 
-### 4.3 피처 중요도 분석
+[FIG:model_perf]
+*Fig. 2. 모델별 Train / Val / Test R² 비교. ⭐: 자동 선택된 최적 모델 ({bm}).*
 
-**Fig. 1.** 피처 중요도 상위 {min(5,len(top5_feat))}개 기술자 분석:
+### 4.3 피처 중요도 분석
 
 {_feat_importance_discussion(top5_feat, top5_imp)}
 
@@ -369,6 +370,9 @@ logRMSE = {cv_rmse:.4f}
 {h3_feat2}(중요도 {h3_imp2:.4f})가 유전율 예측의 핵심 기술자로 확인되어, \
 저유전율 소재 설계 시 극성 최소화와 소수성 극대화가 핵심 설계 원칙임을 \
 데이터 기반으로 검증하였다.
+
+[FIG:feat_imp]
+*Fig. 1. 피처 중요도 상위 {min(5,len(top5_feat))}개 기술자. 빨간색: 상위 3개.*
 
 ### 4.4 후보 스크리닝 결과
 
@@ -381,7 +385,13 @@ logRMSE = {cv_rmse:.4f}
 예측 불확실성(pred_std)은 앙상블 모델 간 예측 분산으로 산출되며, \
 값이 클수록 훈련 공간에서 멀리 떨어진 구조임을 나타낸다.
 
+[FIG:screening]
+*Fig. 3. 스크리닝 상위 후보 예측 유전율. 에러바: 앙상블 불확실도(std). 녹색: k < {k_threshold} 만족.*
+
 {top_chem}
+
+[FIG:mol_grid]
+*Fig. 4. 스크리닝 상위 6종 후보 분자 구조 (RDKit Draw, k 예측값 표시).*
 """
 
     # ── 5. 가설 검증 요약 ────────────────────────────────────────────────────
@@ -752,11 +762,221 @@ def _log_rmse_to_factor(log_rmse) -> float:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 논문용 그림 생성
+# ─────────────────────────────────────────────────────────────────────────────
+def generate_paper_figures(
+    feat_imp:     pd.Series,
+    metrics:      dict,
+    df_screening: pd.DataFrame,
+    k_threshold:  float = 2.4,
+    best_model:   str   = "gbr",
+) -> dict:
+    """
+    논문 삽입용 그림 4개를 생성하여 PNG bytes dict로 반환.
+
+    Returns
+    -------
+    {
+      "feat_imp"   : PNG bytes — 피처 중요도 가로 막대
+      "model_perf" : PNG bytes — 모델별 R² 비교 막대
+      "screening"  : PNG bytes — 스크리닝 상위 후보 예측 k
+      "mol_grid"   : PNG bytes — 분자 구조 그리드 (RDKit)
+    }
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import io as _io
+
+    _set_korean_font()
+    figs: dict = {}
+
+    # ── Fig 1: 피처 중요도 ────────────────────────────────────────────────────
+    try:
+        top_n = min(10, len(feat_imp))
+        fi    = feat_imp.head(top_n).sort_values()
+
+        fig, ax = plt.subplots(figsize=(8, max(3.5, top_n * 0.42)))
+        colors = ["#E74C3C" if i >= top_n - 3 else "#3498DB"
+                  for i in range(top_n)]
+        ax.barh(range(top_n), fi.values, color=colors,
+                edgecolor="white", height=0.65)
+        ax.set_yticks(range(top_n))
+        ax.set_yticklabels(fi.index.tolist(), fontsize=10)
+        ax.set_xlabel("Feature Importance", fontsize=11)
+        ax.set_title("피처 중요도 상위 {}개".format(top_n),
+                     fontsize=12, fontweight="bold")
+        for idx, v in enumerate(fi.values):
+            ax.text(v + fi.values.max() * 0.01, idx,
+                    f"{v:.4f}", va="center", fontsize=9)
+        ax.set_xlim(0, fi.values.max() * 1.25)
+        plt.tight_layout()
+        figs["feat_imp"] = _fig_to_bytes(fig)
+        plt.close(fig)
+    except Exception as e:
+        print(f"[generate_paper_figures] Fig1 실패: {e}")
+
+    # ── Fig 2: 모델 성능 비교 R² ──────────────────────────────────────────────
+    try:
+        mnames  = list(metrics.keys())
+        tr_r2   = [max(0, metrics[m].get("train", {}).get("R2", 0)) for m in mnames]
+        va_r2   = [max(0, metrics[m].get("val",   {}).get("R2", 0)) for m in mnames]
+        te_r2   = [max(0, metrics[m].get("test",  {}).get("R2", 0)) for m in mnames]
+
+        x     = np.arange(len(mnames))
+        width = 0.25
+
+        fig, ax = plt.subplots(figsize=(8, 4.5))
+        ax.bar(x - width, tr_r2, width, label="Train",
+               color="#3498DB", alpha=0.85, edgecolor="white")
+        ax.bar(x,          va_r2, width, label="Val",
+               color="#F39C12", alpha=0.85, edgecolor="white")
+        b3 = ax.bar(x + width, te_r2, width, label="Test",
+                    color="#E74C3C", alpha=0.85, edgecolor="white")
+
+        ax.set_xticks(x)
+        ax.set_xticklabels([m.upper() for m in mnames], fontsize=11)
+        ax.set_ylabel("R²", fontsize=11)
+        ax.set_ylim(0, 1.18)
+        ax.axhline(1.0, color="gray", ls="--", lw=0.8, alpha=0.5)
+        ax.legend(fontsize=10)
+        ax.set_title("모델별 Train / Val / Test R² 비교",
+                     fontsize=12, fontweight="bold")
+
+        for bar, val in zip(b3, te_r2):
+            if val > 0:
+                ax.text(bar.get_x() + bar.get_width() / 2,
+                        val + 0.02, f"{val:.3f}",
+                        ha="center", va="bottom", fontsize=9,
+                        color="#C0392B", fontweight="bold")
+
+        # 최적 모델 별표
+        if best_model.lower() in mnames:
+            bi = mnames.index(best_model.lower())
+            ax.annotate("★", xy=(x[bi] + width, te_r2[bi] + 0.09),
+                        ha="center", fontsize=16, color="#F39C12")
+
+        plt.tight_layout()
+        figs["model_perf"] = _fig_to_bytes(fig)
+        plt.close(fig)
+    except Exception as e:
+        print(f"[generate_paper_figures] Fig2 실패: {e}")
+
+    # ── Fig 3: 스크리닝 결과 ──────────────────────────────────────────────────
+    try:
+        df_v   = (df_screening[df_screening["valid"] == True].copy()
+                  if "valid" in df_screening.columns
+                  else df_screening.copy())
+        df_top = df_v.head(10).copy()
+
+        if not df_top.empty and "pred_mean" in df_top.columns:
+            names  = [str(n)[:20] for n in df_top["name"].tolist()]
+            preds  = df_top["pred_mean"].tolist()
+            stds   = (df_top["pred_std"].tolist()
+                      if "pred_std" in df_top.columns
+                      else [0.0] * len(preds))
+            colors = ["#27AE60" if p < k_threshold else "#E74C3C"
+                      for p in preds]
+
+            fig, ax = plt.subplots(figsize=(9, max(4, len(names) * 0.5)))
+            ax.barh(range(len(names)), preds,
+                    xerr=stds, color=colors, height=0.6, alpha=0.85,
+                    error_kw={"elinewidth": 1.5, "capsize": 4,
+                               "ecolor": "#555"}, edgecolor="white")
+            ax.set_yticks(range(len(names)))
+            ax.set_yticklabels(names, fontsize=9)
+            ax.invert_yaxis()
+            ax.axvline(k_threshold, color="red", ls="--", lw=1.5,
+                       label=f"k = {k_threshold} 기준")
+            ax.axvline(2.0, color="orange", ls=":", lw=1.2,
+                       label="k = 2.0")
+            ax.set_xlabel("예측 유전율 k  (mean ± std)", fontsize=11)
+            ax.set_title("스크리닝 상위 후보 예측 유전율",
+                         fontsize=12, fontweight="bold")
+            ax.legend(fontsize=9)
+
+            # AD 아이콘
+            if "ad_ok" in df_top.columns:
+                for idx, (ad, p, s) in enumerate(
+                        zip(df_top["ad_ok"].tolist(), preds, stds)):
+                    marker = "OK" if ad else "!"
+                    offset = p + (s or 0) + (max(preds) - min(preds)) * 0.03
+                    ax.text(offset, idx, marker, va="center",
+                            fontsize=10,
+                            color="#27AE60" if ad else "#E67E22")
+
+            plt.tight_layout()
+            figs["screening"] = _fig_to_bytes(fig)
+            plt.close(fig)
+    except Exception as e:
+        print(f"[generate_paper_figures] Fig3 실패: {e}")
+
+    # ── Fig 4: 분자 구조 그리드 ───────────────────────────────────────────────
+    try:
+        from engines.screening_engine import draw_grid
+        df_v2  = (df_screening[df_screening["valid"] == True].copy()
+                  if "valid" in df_screening.columns
+                  else df_screening.copy())
+        df_mol = df_v2.head(6)
+
+        if not df_mol.empty and "smiles" in df_mol.columns:
+            mol_bytes = draw_grid(
+                smiles_list = df_mol["smiles"].tolist(),
+                names       = df_mol["name"].tolist(),
+                preds       = (df_mol["pred_mean"].tolist()
+                               if "pred_mean" in df_mol.columns
+                               else [None] * len(df_mol)),
+                n_cols  = 3,
+                mol_size= (240, 200),
+            )
+            if mol_bytes:
+                figs["mol_grid"] = mol_bytes
+    except Exception as e:
+        print(f"[generate_paper_figures] Fig4 실패: {e}")
+
+    return figs
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# matplotlib 헬퍼
+# ─────────────────────────────────────────────────────────────────────────────
+def _set_korean_font():
+    """matplotlib 한국어 폰트 설정 (플랫폼 독립)."""
+    import matplotlib.pyplot as plt
+    import matplotlib.font_manager as fm
+    import platform
+
+    if platform.system() == "Windows":
+        candidates = ["Malgun Gothic", "맑은 고딕", "NanumGothic"]
+    elif platform.system() == "Darwin":
+        candidates = ["AppleGothic", "NanumGothic"]
+    else:
+        candidates = ["NanumGothic", "NanumBarunGothic", "DejaVu Sans"]
+
+    available = {f.name for f in fm.fontManager.ttflist}
+    for font in candidates:
+        if font in available:
+            plt.rcParams["font.family"] = font
+            break
+
+    plt.rcParams["axes.unicode_minus"] = False
+
+
+def _fig_to_bytes(fig) -> bytes:
+    """matplotlib Figure → PNG bytes (dpi=150)."""
+    import io as _io
+    buf = _io.BytesIO()
+    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+    return buf.getvalue()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Markdown → Word (.docx) 변환
 # ─────────────────────────────────────────────────────────────────────────────
-def paper_to_docx(paper: dict) -> bytes:
+def paper_to_docx(paper: dict, figures: dict | None = None) -> bytes:
     """
     generate_paper() 결과 dict → Word .docx bytes
+    figures: generate_paper_figures() 결과 {name: png_bytes}
     python-docx 라이브러리 사용
     """
     from docx import Document
@@ -764,6 +984,7 @@ def paper_to_docx(paper: dict) -> bytes:
     from docx.enum.text import WD_ALIGN_PARAGRAPH
     import re, io
 
+    figures = figures or {}
     doc = Document()
 
     # ── 페이지 여백 설정 ─────────────────────────────────────────────────────
@@ -804,6 +1025,23 @@ def paper_to_docx(paper: dict) -> bytes:
                 i += 1
             _md_table_to_docx(doc, tbl_lines)
             continue
+
+        # ── 그림 마커 [FIG:name] ─────────────────────────────────────────────
+        elif line.startswith("[FIG:") and line.endswith("]"):
+            fig_name = line[5:-1]
+            if fig_name in figures:
+                try:
+                    p = doc.add_paragraph()
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = p.add_run()
+                    run.add_picture(io.BytesIO(figures[fig_name]), width=Inches(5.5))
+                except Exception as e:
+                    doc.add_paragraph(f"[그림 삽입 실패: {fig_name} — {e}]")
+            else:
+                # figures 없으면 자리표시자 삽입
+                p = doc.add_paragraph(f"[ 그림 자리: {fig_name} ]")
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.runs[0].font.color.rgb = RGBColor(0xAA, 0xAA, 0xAA)
 
         # ── 수평선 ───────────────────────────────────────────────────────────
         elif re.match(r"^---+$", line.strip()):

@@ -33,7 +33,7 @@ from engines.ml_engine import (
 from engines.screening_engine import (
     screen, load_example_candidates, draw_grid, mol_to_png_bytes
 )
-from engines.paper_engine import generate_paper, paper_to_docx
+from engines.paper_engine import generate_paper, paper_to_docx, generate_paper_figures
 
 # ── 상수 ──────────────────────────────────────────────────────────────────────
 DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "crc_dielectric_combined.csv")
@@ -68,9 +68,10 @@ def _autosave_paper(paper: dict, sess: dict) -> dict:
         f.write(paper["full_md"])
     saved["논문 Markdown"] = md_path
 
-    # 2. 논문 Word (.docx)
+    # 2. 논문 Word (.docx) — figures 포함
     try:
-        docx_bytes = paper_to_docx(paper)
+        _figs      = sess.get("paper_figures", {})
+        docx_bytes = paper_to_docx(paper, figures=_figs)
         docx_path  = os.path.join(OUTPUT_DIR, f"lowk_qspr_paper_{today}.docx")
         with open(docx_path, "wb") as f:
             f.write(docx_bytes)
@@ -993,7 +994,17 @@ def render_s5():
                     k_threshold     = 2.4,
                     train_threshold = float(_threshold),
                 )
-                st.session_state["paper"] = paper
+
+                # ── 논문용 그림 생성 ─────────────────────────────────────────
+                figures = generate_paper_figures(
+                    feat_imp     = feat_imp,
+                    metrics      = res["metrics"],
+                    df_screening = st.session_state["s4_result"],
+                    k_threshold  = 2.4,
+                    best_model   = _best_model,
+                )
+                st.session_state["paper"]         = paper
+                st.session_state["paper_figures"] = figures
 
                 # ── 자동 저장 ────────────────────────────────────────────────
                 saved_paths = _autosave_paper(paper, st.session_state)
@@ -1054,9 +1065,10 @@ def render_s5():
     st.markdown("---")
     col_d1, col_d2, col_d3 = st.columns(3)
 
+    _figures = st.session_state.get("paper_figures", {})
     col_d1.download_button(
         "⬇ Word 다운로드 (.docx)",
-        data     = paper_to_docx(paper),
+        data     = paper_to_docx(paper, figures=_figures),
         file_name= "lowk_qspr_paper.docx",
         mime     = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
