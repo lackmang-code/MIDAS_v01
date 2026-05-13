@@ -961,17 +961,27 @@ def render_s5():
 
     # ── 논문 생성 버튼 ────────────────────────────────────────────────────────
     if "paper" not in st.session_state:
+        st.info("💡 S3 학습 결과와 S4 스크리닝 결과를 바탕으로 한국어+영문 논문 초안을 자동 생성합니다.")
         if st.button("📝 논문 초안 생성", type="primary"):
             with st.spinner("실계산 수치 기반 논문 초안 생성 중..."):
+                # best_model, model_mode 추출
+                _best_model = res.get("cv", {}).get("best_model", "gbr")
+                _model_mode = res.get("mode", "lowk")
+                _threshold  = res.get("threshold", 3.5)
+
                 paper = generate_paper(
-                    df_dataset   = df,
-                    feat_names   = st.session_state["feat_names"],
-                    X_all_shape  = st.session_state["X_all"].shape,
-                    cv_result    = res["cv"],
-                    metrics      = res["metrics"],
-                    df_screening = st.session_state["s4_result"],
-                    feat_imp     = feat_imp,
-                    log_tf       = res.get("log_tf", True),
+                    df_dataset      = df,
+                    feat_names      = st.session_state["feat_names"],
+                    X_all_shape     = st.session_state["X_all"].shape,
+                    cv_result       = res["cv"],
+                    metrics         = res["metrics"],
+                    df_screening    = st.session_state["s4_result"],
+                    feat_imp        = feat_imp,
+                    log_tf          = res.get("log_tf", True),
+                    best_model      = _best_model,
+                    model_mode      = _model_mode,
+                    k_threshold     = 2.4,
+                    train_threshold = float(_threshold),
                 )
                 st.session_state["paper"] = paper
 
@@ -987,7 +997,7 @@ def render_s5():
     # ── 저장 경로 표시 ───────────────────────────────────────────────────────
     saved = st.session_state.get("paper_saved_paths", {})
     if saved:
-        with st.expander("💾 자동 저장 위치", expanded=True):
+        with st.expander("💾 자동 저장 위치", expanded=False):
             for label, path in saved.items():
                 st.markdown(f"- **{label}**: `{path}`")
 
@@ -997,26 +1007,42 @@ def render_s5():
         st.session_state.pop("paper", None)
         st.rerun()
 
-    # ── 탭 구성 ───────────────────────────────────────────────────────────────
-    pt1, pt2, pt3, pt4, pt5 = st.tabs(
-        ["📋 Abstract", "🔧 Methods", "📊 Results", "🏁 Conclusion", "📄 Full MD"]
-    )
+    # ── 탭 구성 (7섹션) ───────────────────────────────────────────────────────
+    pt1, pt2, pt3, pt4, pt5, pt6, pt7, pt8, pt9 = st.tabs([
+        "📋 초록",
+        "📖 서론",
+        "💡 연구가설",
+        "🔧 연구방법",
+        "📊 결과",
+        "✅ 가설검증",
+        "🏁 결론",
+        "⚠️ 한계점",
+        "📄 전체 MD",
+    ])
 
     with pt1:
         st.markdown(paper["abstract"])
     with pt2:
-        st.markdown(paper["methods"])
+        st.markdown(paper.get("intro", "*서론 없음*"))
     with pt3:
-        st.markdown(paper["results"])
+        st.markdown(paper.get("hypothesis", "*가설 없음*"))
     with pt4:
-        st.markdown(paper["conclusion"])
+        st.markdown(paper["methods"])
     with pt5:
-        st.markdown("**전체 Markdown (복사 → Word/LaTeX 변환)**")
+        st.markdown(paper["results"])
+    with pt6:
+        st.markdown(paper.get("hypothesis_val", "*가설 검증 없음*"))
+    with pt7:
+        st.markdown(paper["conclusion"])
+    with pt8:
+        st.markdown(paper.get("limitations", "*한계점 없음*"))
+    with pt9:
+        st.markdown("**전체 Markdown — 복사하여 Word/LaTeX/Overleaf 변환 가능**")
         st.text_area("", value=paper["full_md"], height=600, key="full_md_area")
 
     # ── 다운로드 ──────────────────────────────────────────────────────────────
     st.markdown("---")
-    col_d1, col_d2 = st.columns(2)
+    col_d1, col_d2, col_d3 = st.columns(3)
 
     col_d1.download_button(
         "⬇ Markdown 다운로드 (.md)",
@@ -1025,28 +1051,38 @@ def render_s5():
         mime     = "text/markdown",
     )
 
+    # Abstract만 별도 다운로드
+    col_d2.download_button(
+        "⬇ Abstract (.txt)",
+        data     = paper["abstract"].encode("utf-8"),
+        file_name= "abstract.txt",
+        mime     = "text/plain",
+    )
+
     # 핵심 수치 요약 CSV
-    gbr_te = res["metrics"]["gbr"]["test"]
-    cv     = res["cv"]
-    df_sc  = st.session_state["s4_result"]
+    _best = res.get("cv", {}).get("best_model", "gbr")
+    bm_te = res["metrics"].get(_best, res["metrics"].get("gbr", {})).get("test", {})
+    cv    = res["cv"]
+    df_sc = st.session_state["s4_result"]
     df_valid = df_sc[df_sc["valid"] == True] if "valid" in df_sc.columns else df_sc
 
     summary_data = {
-        "항목":  ["데이터셋 분자수", "피처 수", "GBR Test R²", "GBR Test RMSE",
-                   "GBR Test logRMSE", "CV R²", "스크리닝 후보수", "k<3 예측수"],
-        "값":    [
+        "항목": ["데이터셋 분자수", "피처 수", f"{_best.upper()} Test R²",
+                  f"{_best.upper()} Test RMSE", f"{_best.upper()} logRMSE",
+                  "CV R²", "스크리닝 후보수", "k<2.4 예측수"],
+        "값": [
             len(load_data()),
             len(st.session_state["feat_names"]),
-            round(gbr_te["R2"],   4),
-            round(gbr_te["RMSE"], 4),
-            gbr_te.get("log_RMSE", "–"),
+            round(bm_te.get("R2",   0), 4),
+            round(bm_te.get("RMSE", 0), 4),
+            bm_te.get("log_RMSE", "–"),
             f"{cv['r2_mean']:.3f}±{cv['r2_std']:.3f}",
             len(df_valid),
             int((df_valid["pred_mean"] < 2.4).sum()) if "pred_mean" in df_valid.columns else "–",
         ],
     }
     summary_csv = pd.DataFrame(summary_data).to_csv(index=False).encode("utf-8-sig")
-    col_d2.download_button(
+    col_d3.download_button(
         "⬇ 핵심 수치 CSV",
         data      = summary_csv,
         file_name = "key_metrics.csv",
