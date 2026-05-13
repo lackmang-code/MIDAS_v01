@@ -33,7 +33,7 @@ from engines.ml_engine import (
 from engines.screening_engine import (
     screen, load_example_candidates, draw_grid, mol_to_png_bytes
 )
-from engines.paper_engine import generate_paper
+from engines.paper_engine import generate_paper, paper_to_docx
 
 # ── 상수 ──────────────────────────────────────────────────────────────────────
 DATA_PATH = os.path.join(os.path.dirname(__file__), "data", "crc_dielectric_combined.csv")
@@ -67,6 +67,16 @@ def _autosave_paper(paper: dict, sess: dict) -> dict:
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(paper["full_md"])
     saved["논문 Markdown"] = md_path
+
+    # 2. 논문 Word (.docx)
+    try:
+        docx_bytes = paper_to_docx(paper)
+        docx_path  = os.path.join(OUTPUT_DIR, f"lowk_qspr_paper_{today}.docx")
+        with open(docx_path, "wb") as f:
+            f.write(docx_bytes)
+        saved["논문 Word(docx)"] = docx_path
+    except Exception as e:
+        saved["논문 Word(docx)"] = f"생성 실패: {e}"
 
     # 2. 스크리닝 결과 CSV
     if "s4_result" in sess:
@@ -1045,18 +1055,17 @@ def render_s5():
     col_d1, col_d2, col_d3 = st.columns(3)
 
     col_d1.download_button(
+        "⬇ Word 다운로드 (.docx)",
+        data     = paper_to_docx(paper),
+        file_name= "lowk_qspr_paper.docx",
+        mime     = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+
+    col_d2.download_button(
         "⬇ Markdown 다운로드 (.md)",
         data     = paper["full_md"].encode("utf-8"),
         file_name= "lowk_qspr_paper.md",
         mime     = "text/markdown",
-    )
-
-    # Abstract만 별도 다운로드
-    col_d2.download_button(
-        "⬇ Abstract (.txt)",
-        data     = paper["abstract"].encode("utf-8"),
-        file_name= "abstract.txt",
-        mime     = "text/plain",
     )
 
     # 핵심 수치 요약 CSV

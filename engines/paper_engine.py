@@ -749,3 +749,200 @@ def _log_rmse_to_factor(log_rmse) -> float:
         return float(np.exp(float(log_rmse)))
     except Exception:
         return float("nan")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Markdown → Word (.docx) 변환
+# ─────────────────────────────────────────────────────────────────────────────
+def paper_to_docx(paper: dict) -> bytes:
+    """
+    generate_paper() 결과 dict → Word .docx bytes
+    python-docx 라이브러리 사용
+    """
+    from docx import Document
+    from docx.shared import Pt, Inches, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    import re, io
+
+    doc = Document()
+
+    # ── 페이지 여백 설정 ─────────────────────────────────────────────────────
+    for section in doc.sections:
+        section.top_margin    = Inches(1.0)
+        section.bottom_margin = Inches(1.0)
+        section.left_margin   = Inches(1.2)
+        section.right_margin  = Inches(1.2)
+
+    # ── 기본 스타일 폰트 설정 ────────────────────────────────────────────────
+    doc.styles["Normal"].font.name = "맑은 고딕"
+    doc.styles["Normal"].font.size = Pt(10.5)
+
+    # ── Markdown 파싱 및 Word 요소 생성 ──────────────────────────────────────
+    full_md = paper["full_md"]
+    lines   = full_md.split("\n")
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+
+        # ── 제목 (Headings) ──────────────────────────────────────────────────
+        if line.startswith("# "):
+            h = doc.add_heading(line[2:].strip(), level=1)
+            h.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        elif line.startswith("## "):
+            doc.add_heading(line[3:].strip(), level=2)
+        elif line.startswith("### "):
+            doc.add_heading(line[4:].strip(), level=3)
+        elif line.startswith("#### "):
+            doc.add_heading(line[5:].strip(), level=4)
+
+        # ── 테이블 감지 ──────────────────────────────────────────────────────
+        elif line.startswith("|"):
+            tbl_lines = []
+            while i < len(lines) and lines[i].startswith("|"):
+                tbl_lines.append(lines[i])
+                i += 1
+            _md_table_to_docx(doc, tbl_lines)
+            continue
+
+        # ── 수평선 ───────────────────────────────────────────────────────────
+        elif re.match(r"^---+$", line.strip()):
+            p = doc.add_paragraph()
+            p.paragraph_format.space_before = Pt(4)
+            p.paragraph_format.space_after  = Pt(4)
+            _add_hr(p)
+
+        # ── 글머리 기호 ──────────────────────────────────────────────────────
+        elif line.startswith("- ") or line.startswith("* "):
+            p = doc.add_paragraph(style="List Bullet")
+            _add_inline(p, line[2:])
+
+        # ── 번호 목록 ────────────────────────────────────────────────────────
+        elif re.match(r"^\d+\. ", line):
+            p = doc.add_paragraph(style="List Number")
+            _add_inline(p, re.sub(r"^\d+\. ", "", line))
+
+        # ── 인용/강조 블록 (> ) ──────────────────────────────────────────────
+        elif line.startswith("> "):
+            p = doc.add_paragraph()
+            p.paragraph_format.left_indent = Inches(0.3)
+            run = p.add_run(line[2:].strip())
+            run.italic = True
+            run.font.color.rgb = RGBColor(0x44, 0x44, 0x44)
+
+        # ── 코드 블록 (```) ──────────────────────────────────────────────────
+        elif line.startswith("```"):
+            code_lines = []
+            i += 1
+            while i < len(lines) and not lines[i].startswith("```"):
+                code_lines.append(lines[i])
+                i += 1
+            if code_lines:
+                p = doc.add_paragraph()
+                run = p.add_run("\n".join(code_lines))
+                run.font.name = "Courier New"
+                run.font.size = Pt(9)
+                run.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
+
+        # ── 빈 줄 ────────────────────────────────────────────────────────────
+        elif not line.strip():
+            pass  # Word 스타일이 자동으로 간격 처리
+
+        # ── 일반 단락 ────────────────────────────────────────────────────────
+        else:
+            p = doc.add_paragraph()
+            _add_inline(p, line)
+
+        i += 1
+
+    # ── bytes 반환 ────────────────────────────────────────────────────────────
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
+def _add_inline(para, text: str):
+    """**bold**, *italic*, `code` 인라인 포맷을 파싱하여 run 추가."""
+    import re
+    # **bold** → bold run, *italic* → italic run, `code` → monospace run
+    pattern = re.compile(r"(\*\*.*?\*\*|\*.*?\*|`.*?`)")
+    parts   = pattern.split(text)
+    for part in parts:
+        if not part:
+            continue
+        if part.startswith("**") and part.endswith("**") and len(part) > 4:
+            run = para.add_run(part[2:-2])
+            run.bold = True
+        elif part.startswith("*") and part.endswith("*") and len(part) > 2:
+            run = para.add_run(part[1:-1])
+            run.italic = True
+        elif part.startswith("`") and part.endswith("`") and len(part) > 2:
+            run = para.add_run(part[1:-1])
+            run.font.name = "Courier New"
+            run.font.size = Pt(9)
+        else:
+            para.add_run(part)
+
+
+def _md_table_to_docx(doc, table_lines: list):
+    """Markdown 테이블 라인 → Word Table 변환."""
+    import re
+    from docx.shared import Pt, RGBColor
+    from docx.oxml.ns import qn
+
+    # 구분선 행 제거 (|---|---|)
+    data_lines = [l for l in table_lines
+                  if not re.match(r"^\|[-| :]+\|$", l.strip())]
+    if not data_lines:
+        return
+
+    rows = []
+    for line in data_lines:
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        rows.append(cells)
+
+    if not rows:
+        return
+
+    n_cols = max(len(r) for r in rows)
+    n_rows = len(rows)
+
+    tbl = doc.add_table(rows=n_rows, cols=n_cols)
+    tbl.style = "Table Grid"
+
+    for r_idx, row in enumerate(rows):
+        for c_idx in range(n_cols):
+            cell_text = row[c_idx] if c_idx < len(row) else ""
+            cell = tbl.cell(r_idx, c_idx)
+            p    = cell.paragraphs[0]
+            p.clear()
+
+            if r_idx == 0:
+                # 헤더 행: 볼드
+                run = p.add_run(re.sub(r"\*\*", "", cell_text))
+                run.bold = True
+                # 헤더 배경색
+                from docx.oxml import OxmlElement
+                tc_pr = cell._tc.get_or_add_tcPr()
+                shd   = OxmlElement("w:shd")
+                shd.set(qn("w:val"),   "clear")
+                shd.set(qn("w:color"), "auto")
+                shd.set(qn("w:fill"),  "D9E2F3")
+                tc_pr.append(shd)
+            else:
+                _add_inline(p, cell_text)
+
+
+def _add_hr(para):
+    """단락 아래에 수평선(border) 추가."""
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    p_pr = para._p.get_or_add_pPr()
+    p_bdr = OxmlElement("w:pBdr")
+    bottom = OxmlElement("w:bottom")
+    bottom.set(qn("w:val"),   "single")
+    bottom.set(qn("w:sz"),    "6")
+    bottom.set(qn("w:space"), "1")
+    bottom.set(qn("w:color"), "AAAAAA")
+    p_bdr.append(bottom)
+    p_pr.append(p_bdr)
